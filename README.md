@@ -1,162 +1,118 @@
-\# RISC-V CPU Core (RV32I)
+# RV32I Minimal SoC in VHDL
 
-\# Developed by engineer Mateus Telles Nébias
+This project implements a **custom RV32I-based mini System-on-Chip (SoC)** in VHDL, evolving from a single-cycle CPU into a modular and extensible SoC architecture with **multiple clock domains and explicit clock domain crossing (CDC)**.
 
+The design emphasizes **clean architecture, modular RTL design, and verification-driven development**, targeting FPGA/RTL and SoC-oriented roles.
 
+---
 
-This project implements a minimalist RISC-V RV32I CPU core from scratch using synthesizable VHDL. It is designed for educational purposes and as a demonstration of digital design and computer architecture skills. The processor is capable of executing a subset of the RISC-V instruction set and can be synthesized on an FPGA.
+##  Key Features
 
+- **RV32I Single-Cycle Core**
+  - Clean datapath/control separation
+  - Modular components (ALU, Control Unit, Register File, Branch Logic, etc.)
 
+- **Custom APB-like System Bus**
+  - Memory-mapped architecture
+  - Byte-enable support (`wstrb`)
+  - Ready/valid handshake
+  - Error signaling
+  - Designed for extensibility (DMA, wait states, CDC)
 
-\##  Features
+- **Multi-Clock Domain Architecture**
+  - `core_clk`: CPU, bus, memory, DMA, peripherals
+  - `periph_clk`: UART transmission engine
+  - Explicit CDC design using handshake-based synchronization
 
+- **Clock Domain Crossing (CDC)**
+  - Toggle-based handshake (`req/ack`) between domains
+  - Data stability guarantees during transfer
+  - Per-domain synchronized resets via reset synchronizers
 
+- **Memory Subsystems**
+  - Dedicated instruction memory
+  - Data memory integrated as a bus slave
 
-\- \*\*Instruction Set\*\*: RV32I base integer instruction set
+- **Memory-Mapped Peripherals**
+  - GPIO
+  - Timer with programmable compare and IRQ pulse generation
+  - UART with split architecture (register interface + TX engine)
 
-\- \*\*Pipeline\*\*: Single-cycle architecture (1-stage pipeline)
+- **Timer with Precise IRQ Semantics**
+  - Compare-based trigger
+  - Single-cycle IRQ pulse
+  - Clean separation from future interrupt controller logic
 
-\- \*\*Register File\*\*: 32 general-purpose 32-bit registers
+- **DMA Engine (v1)**
+  - Autonomous RAM-to-RAM transfers
+  - Word-based transfer model (32-bit)
+  - Memory-mapped control interface
+  - Status reporting (`busy`, `done`, `error`)
+  - IRQ on completion
+  - Simplified bus takeover (no full arbiter yet)
 
-\- \*\*Memory\*\*: Separate instruction and data memory (BRAM)
+- **SoC Integration**
+  - Unified `soc_top` architecture
+  - CPU/DMA master multiplexing
+  - Structured interconnect with address decoding
 
-\- \*\*Peripherals\*\*:
+- **Verification-Oriented Design**
+  - Dedicated testbenches per module
+  - Assertion-based validation
+  - Full SoC-level simulation
 
-  - UART (TX/RX)
+---
 
-  - GPIO (LEDs, buttons)
+##  Architecture Overview
 
-  - Timer (optional)
+The system is organized as a modular SoC composed of:
 
-\- \*\*Memory-Mapped I/O\*\* for peripheral access
+- `rv32i_core` (CPU)
+- `instruction_memory`
+- `system bus / interconnect`
+- `data_memory`
+- peripherals (GPIO, Timer, UART, DMA registers)
+- `dma_engine`
 
-\- \*\*Firmware\*\*: Written in C using the RISC-V GCC toolchain
+The UART is architecturally split into:
+- register interface in `core_clk`
+- transmission engine in `periph_clk`
+- CDC bridge using handshake synchronization
 
+---
 
+##  Design Goals
 
-\##  Project Structure
+- Build a **realistic SoC architecture**, not just a CPU
+- Demonstrate **multi-clock domain design and CDC handling**
+- Apply **clean RTL design and modularity**
+- Ensure **strong verification coverage**
+- Provide a solid **portfolio project for FPGA/SoC roles**
 
-risc-v-cpu/
+---
 
-├── rtl/           # VHDL source files
+##  Current Scope
 
-├── tb/            # Testbenches in VHDL
+- Single-cycle RV32I core
+- Single-master bus with DMA takeover mechanism
+- Two clock domains (`core_clk`, `periph_clk`)
+- CDC implemented for UART TX path
+- No full multi-master arbitration yet
 
-├── firmware/      # RISC-V C firmware
+---
 
-├── docs/          # Documentation (block diagrams, memory map, etc.)
+##  Planned Extensions
 
-├── scripts/       # Build and simulation scripts
+- Interrupt controller with pending/ack logic
+- Additional peripherals (SPI, enhanced UART RX)
+- Full multi-master arbitration
+- Expanded CDC usage across subsystems
+- More advanced DMA features
 
-├── constraints/   # FPGA constraint files (e.g., XDC)
+---
 
-├── README.md
+##  Tools
 
-└── .gitignore
-
-
-
-
-
-\##  Verification
-
-
-
-\- Unit tests for ALU, register file, and control logic
-
-\- Integration testbench for full CPU execution
-
-\- UART loopback test
-
-\- VCD waveform generation for debugging
-
-
-
-\##  Tools Used
-
-
-
-\- VHDL
-
-\- \*\*GHDL / ModelSim\*\* for simulation
-
-\- Vivado for synthesis and FPGA implementation
-
-\- \*\*RISC-V GCC Toolchain\*\* for firmware compilation
-
-\- \*\*GTKWave\*\* for waveform analysis
-
-
-
-\## 🖥️ FPGA Target
-
-
-
-\- Designed for \[Your FPGA Board Name Here]  
-
-&nbsp; (e.g., Digilent Basys 3, DE10-Lite, etc.)
-
-
-
-\## 📷 Demo
-
-
-
-> \_Coming soon: video demo of the CPU running firmware and communicating via UART.\_
-
-
-
-\## 📚 Documentation
-
-
-
-\- Block diagram of CPU architecture
-
-\- Instruction decoding table
-
-\- Memory map and peripheral register layout
-
-\- Timing diagrams for UART and memory access
-
-
-
-\## 🧠 Motivation
-
-
-
-This project was developed as a personal initiative to deepen my understanding of computer architecture, digital design, and hardware-software co-design. It serves as a portfolio piece to demonstrate my ability to design, verify, and implement a working CPU core on FPGA using VHDL.
-
-
-
-\## 📌 Roadmap
-
-
-
-\- \[x] ALU and Register File (VHDL)
-
-\- \[x] Instruction Decoder and Control Unit
-
-\- \[x] Memory Integration
-
-\- \[x] UART Peripheral
-
-\- \[x] Firmware Toolchain Setup
-
-\- \[ ] Timer Peripheral
-
-\- \[ ] Pipeline Optimization (2-stage or 3-stage)
-
-\- \[ ] AXI-lite Bus Integration
-
-\- \[ ] Cache (optional)
-
-
-
-\## 📜 License
-
-
-
-This project is released under the MIT License.
-
-
-
+- VHDL (IEEE 1076)
+- Xilinx Vivado / XSim
+- Assertion-based verification
