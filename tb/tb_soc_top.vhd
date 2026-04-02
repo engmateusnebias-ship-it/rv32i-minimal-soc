@@ -1,10 +1,16 @@
 -- tb_soc_top.vhd
--- Self-checking SoC top-level testbench (Vivado/XSim, VHDL-2002 compatible)
+-- Self-checking SoC top-level testbench for the DMA + UART demo
+--
 -- This TB validates:
---  * After START button press, the program updates GPIO_OUT with a counter 0..10 (wraps to 0).
---  * The sequence increments by +1 (mod 11) without skipping.
---  * STOP button press freezes the output (no further updates while stopped).
---  * START again resumes updates.
+--   * After button press, GPIO_OUT goes through:
+--       0x0 -> 0x1 -> 0x2 -> final result
+--   * Final result must be 0xA (success)
+--   * UART_TX must show activity during the report phase
+--   * After button release, GPIO_OUT returns to 0x0
+--
+-- Clocks:
+--   * core clock    = 10 ns
+--   * peripheral clk = 14 ns
 
 library ieee;
 use ieee.std_logic_1164.all;
@@ -15,9 +21,11 @@ end entity;
 
 architecture sim of tb_soc_top is
 
-  constant CLK_PERIOD : time := 10 ns;
+  constant CORE_CLK_PERIOD   : time := 10 ns;
+  constant PERIPH_CLK_PERIOD : time := 14 ns;
 
   signal clk         : std_logic := '0';
+  signal periph_clk  : std_logic := '0';
   signal rst         : std_logic := '1';
   signal gpio_toggle : std_logic := '0';
   signal gpio_out    : std_logic_vector(3 downto 0);
@@ -30,13 +38,10 @@ architecture sim of tb_soc_top is
     end loop;
   end procedure;
 
-  procedure press_button(signal btn : inout std_logic; signal c : in std_logic) is
+  function gpio_to_int(v : std_logic_vector(3 downto 0)) return integer is
   begin
-    btn <= '1';
-    tick(c, 100);
-    btn <= '0';
-    tick(c, 20);
-  end procedure;
+    return to_integer(unsigned(v));
+  end function;
 
   function is_01_only(v : std_logic_vector) return boolean is
   begin
@@ -48,80 +53,101 @@ architecture sim of tb_soc_top is
     return true;
   end function;
 
-  function gpio_nibble_to_int(v : std_logic_vector(3 downto 0)) return integer is
-  begin
-    return to_integer(unsigned(v(3 downto 0)));
-  end function;
-
-  function mod11_plus(val : integer; inc : integer) return integer is
-    variable tmp : integer;
-  begin
-    tmp := val + inc;
-    while tmp >= 11 loop
-      tmp := tmp - 11;
-    end loop;
-    while tmp < 0 loop
-      tmp := tmp + 11;
-    end loop;
-    return tmp;
-  end function;
-
-  procedure wait_for_gpio_change(
+  procedure wait_for_gpio_value(
     signal c       : in std_logic;
     signal g       : in std_logic_vector(3 downto 0);
-    prev_val       : in integer;
-    timeout_cycles : in natural;
-    new_val        : out integer
+    expected_val   : in integer;
+    timeout_cycles : in natural
   ) is
     variable v : integer;
   begin
     for i in 1 to timeout_cycles loop
       tick(c, 1);
-      v := gpio_nibble_to_int(g);
-      if v /= prev_val then
-        new_val := v;
+      v := gpio_to_int(g);
+      if v = expected_val then
         return;
       end if;
     end loop;
 
     assert false
-      report "Timeout waiting for GPIO_OUT to change"
+      report "Timeout waiting for GPIO_OUT = " & integer'image(expected_val)
+      severity failure;
+  end procedure;
+
+  procedure wait_for_gpio_result(
+    signal c          : in std_logic;
+    signal g          : in std_logic_vector(3 downto 0);
+    timeout_cycles    : in natural;
+    result_val        : out integer
+  ) is
+    variable v : integer;
+  begin
+    for i in 1 to timeout_cycles loop
+      tick(c, 1);
+      v := gpio_to_int(g);
+      if (v = 10) or (v = 14) then
+        result_val := v;
+        return;
+      end if;
+    end loop;
+
+    assert false
+      report "Timeout waiting for GPIO_OUT final result (0xA or 0xE)"
       severity failure;
 
-    new_val := prev_val;
+    result_val := -1;
   end procedure;
 
 begin
 
-  clk_gen : process
+  -- =======================================================
+  -- Core clock generator
+  -- =======================================================
+  core_clk_gen : process
   begin
     while true loop
       clk <= '0';
-      wait for CLK_PERIOD/2;
+      wait for CORE_CLK_PERIOD/2;
       clk <= '1';
-      wait for CLK_PERIOD/2;
+      wait for CORE_CLK_PERIOD/2;
     end loop;
   end process;
 
+  -- =======================================================
+  -- Peripheral clock generator
+  -- =======================================================
+  periph_clk_gen : process
+  begin
+    while true loop
+      periph_clk <= '0';
+      wait for PERIPH_CLK_PERIOD/2;
+      periph_clk <= '1';
+      wait for PERIPH_CLK_PERIOD/2;
+    end loop;
+  end process;
+
+  -- =======================================================
+  -- DUT
+  -- =======================================================
   uut : entity work.soc_top
     port map (
       clk         => clk,
+      periph_clk  => periph_clk,
       rst         => rst,
       gpio_toggle => gpio_toggle,
       gpio_out    => gpio_out,
       uart_tx     => uart_tx
     );
 
+  -- =======================================================
+  -- Stimulus and checks
+  -- =======================================================
   stim : process
-    variable v0            : integer;
-    variable v1            : integer;
-    variable expected_next : integer;
-    variable expected_alt  : integer;
-    variable saw_ten       : boolean;
-    variable saw_wrap      : boolean;
-    variable last          : integer;
-    variable changes       : integer;
+    variable result_val        : integer;
+    variable uart_activity_cnt : integer;
+    variable last_uart         : std_logic;
   begin
+    -- Initial reset
     rst <= '1';
     gpio_toggle <= '0';
     tick(clk, 5);
@@ -130,92 +156,49 @@ begin
 
     report "tb_soc_top STARTED" severity warning;
 
+    -- Basic sanity after reset
     assert is_01_only(gpio_out)
       report "GPIO_OUT contains unresolved values after reset"
       severity failure;
 
-    v0 := gpio_nibble_to_int(gpio_out);
-    press_button(gpio_toggle, clk);
-    wait_for_gpio_change(clk, gpio_out, v0, 2000, v1);
+    assert gpio_to_int(gpio_out) = 0
+      report "GPIO_OUT should be 0 after reset"
+      severity failure;
 
-    last := v1;
-    saw_ten := (last = 10);
-    saw_wrap := false;
-    changes := 0;
+    -- Press button to start demo
+    gpio_toggle <= '1';
 
-    while (changes < 40) and (not (saw_ten and saw_wrap)) loop
-      v0 := last;
-      wait_for_gpio_change(clk, gpio_out, v0, 4000, v1);
-      expected_next := mod11_plus(last, 1);
+    -- Expect stage markers
+    wait_for_gpio_value(clk, gpio_out, 1, 4000);
+    wait_for_gpio_value(clk, gpio_out, 2, 4000);
 
-      assert v1 = expected_next
-        report "Unexpected GPIO_OUT sequence: expected " & integer'image(expected_next) &
-               " got " & integer'image(v1)
-        severity failure;
+    -- Wait for final result
+    wait_for_gpio_result(clk, gpio_out, 12000, result_val);
 
-      if v1 = 10 then
-        saw_ten := true;
+    -- We want the demo to succeed
+    assert result_val = 10
+      report "DMA/UART demo failed: GPIO_OUT reached 0xE instead of 0xA"
+      severity failure;
+
+    -- Check UART activity during the report phase
+    uart_activity_cnt := 0;
+    last_uart := uart_tx;
+
+    for i in 1 to 3000 loop
+      tick(periph_clk, 1);
+      if uart_tx /= last_uart then
+        uart_activity_cnt := uart_activity_cnt + 1;
+        last_uart := uart_tx;
       end if;
-      if (last = 10) and (v1 = 0) then
-        saw_wrap := true;
-      end if;
-
-      last := v1;
-      changes := changes + 1;
     end loop;
 
-    assert saw_ten
-      report "Did not observe GPIO_OUT reaching 10 while running"
+    assert uart_activity_cnt > 0
+      report "UART_TX showed no activity during the success-report window"
       severity failure;
 
-    assert saw_wrap
-      report "Did not observe GPIO_OUT wrapping from 10 back to 0 while running"
-      severity failure;
-
-    v0 := last;
-    while (last /= 5) loop
-      wait_for_gpio_change(clk, gpio_out, v0, 4000, v1);
-      last := v1;
-      v0 := last;
-      exit when changes > 80;
-      changes := changes + 1;
-    end loop;
-
-    v0 := gpio_nibble_to_int(gpio_out);
-    press_button(gpio_toggle, clk);
-
-    tick(clk, 6000);
-    v1 := gpio_nibble_to_int(gpio_out);
-
-    assert v1 = v0
-      report "GPIO_OUT changed while STOPPED (expected stable)"
-      severity failure;
-
-    press_button(gpio_toggle, clk);
-    wait_for_gpio_change(clk, gpio_out, v0, 8000, v1);
-
-    expected_next := mod11_plus(v0, 1);
-    expected_alt  := mod11_plus(v0, 2);
-
-    assert (v1 = expected_next) or (v1 = expected_alt)
-      report "After RESUME, unexpected first change: expected " &
-             integer'image(expected_next) & " or " & integer'image(expected_alt) &
-             " got " & integer'image(v1)
-      severity failure;
-
-    last := v1;
-    for k in 1 to 6 loop
-      v0 := last;
-      wait_for_gpio_change(clk, gpio_out, v0, 8000, v1);
-      expected_next := mod11_plus(last, 1);
-
-      assert v1 = expected_next
-        report "After RESUME, sequence error: expected " & integer'image(expected_next) &
-               " got " & integer'image(v1)
-        severity failure;
-
-      last := v1;
-    end loop;
+    -- Release button and expect return to idle
+    gpio_toggle <= '0';
+    wait_for_gpio_value(clk, gpio_out, 0, 12000);
 
     report "tb_soc_top PASSED" severity warning;
     wait;

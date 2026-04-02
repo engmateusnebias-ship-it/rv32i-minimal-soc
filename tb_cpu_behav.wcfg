@@ -3,76 +3,769 @@
    <wave_state>
    </wave_state>
    <db_ref_list>
-      <db_ref path="tb_timer_behav.wdb" id="1">
+      <db_ref path="tb_soc_top_behav.wdb" id="1">
          <top_modules>
             <top_module name="numeric_std" />
             <top_module name="standard" />
             <top_module name="std_logic_1164" />
-            <top_module name="tb_timer" />
+            <top_module name="std_logic_textio" />
+            <top_module name="tb_soc_top" />
             <top_module name="textio" />
          </top_modules>
       </db_ref>
    </db_ref_list>
    <zoom_setting>
-      <ZoomStartTime time="0.000000000 ms"></ZoomStartTime>
-      <ZoomEndTime time="3.203938490 ms"></ZoomEndTime>
-      <Cursor1Time time="0.000125000 ms"></Cursor1Time>
+      <ZoomStartTime time="0.000 ns"></ZoomStartTime>
+      <ZoomEndTime time="954.613 ns"></ZoomEndTime>
+      <Cursor1Time time="130.000 ns"></Cursor1Time>
    </zoom_setting>
    <column_width_setting>
-      <NameColumnWidth column_width="163"></NameColumnWidth>
+      <NameColumnWidth column_width="123"></NameColumnWidth>
       <ValueColumnWidth column_width="72"></ValueColumnWidth>
    </column_width_setting>
-   <WVObjectSize size="13" />
-   <wvobject fp_name="/tb_timer/clk" type="logic">
+   <WVObjectSize size="186" />
+   <wvobject fp_name="/tb_soc_top/clk" type="logic">
       <obj_property name="ElementShortName">clk</obj_property>
       <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/rst" type="logic">
+   <wvobject fp_name="/tb_soc_top/periph_clk" type="logic">
+      <obj_property name="ElementShortName">periph_clk</obj_property>
+      <obj_property name="ObjectShortName">periph_clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/rst" type="logic">
       <obj_property name="ElementShortName">rst</obj_property>
       <obj_property name="ObjectShortName">rst</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/sel" type="logic">
-      <obj_property name="ElementShortName">sel</obj_property>
-      <obj_property name="ObjectShortName">sel</obj_property>
+   <wvobject fp_name="/tb_soc_top/gpio_toggle" type="logic">
+      <obj_property name="ElementShortName">gpio_toggle</obj_property>
+      <obj_property name="ObjectShortName">gpio_toggle</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/addr" type="array">
-      <obj_property name="ElementShortName">addr[31:0]</obj_property>
-      <obj_property name="ObjectShortName">addr[31:0]</obj_property>
+   <wvobject fp_name="/tb_soc_top/gpio_out" type="array">
+      <obj_property name="ElementShortName">gpio_out[3:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_out[3:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/wdata" type="array">
-      <obj_property name="ElementShortName">wdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">wdata[31:0]</obj_property>
+   <wvobject fp_name="/tb_soc_top/uart_tx" type="logic">
+      <obj_property name="ElementShortName">uart_tx</obj_property>
+      <obj_property name="ObjectShortName">uart_tx</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/wstrb" type="array">
-      <obj_property name="ElementShortName">wstrb[3:0]</obj_property>
-      <obj_property name="ObjectShortName">wstrb[3:0]</obj_property>
+   <wvobject fp_name="/tb_soc_top/CORE_CLK_PERIOD" type="other">
+      <obj_property name="ElementShortName">CORE_CLK_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">CORE_CLK_PERIOD</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/write_en" type="logic">
-      <obj_property name="ElementShortName">write_en</obj_property>
-      <obj_property name="ObjectShortName">write_en</obj_property>
+   <wvobject fp_name="/tb_soc_top/PERIPH_CLK_PERIOD" type="other">
+      <obj_property name="ElementShortName">PERIPH_CLK_PERIOD</obj_property>
+      <obj_property name="ObjectShortName">PERIPH_CLK_PERIOD</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/read_en" type="logic">
-      <obj_property name="ElementShortName">read_en</obj_property>
-      <obj_property name="ObjectShortName">read_en</obj_property>
+   <wvobject fp_name="/tb_soc_top/uut/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/valid" type="logic">
-      <obj_property name="ElementShortName">valid</obj_property>
-      <obj_property name="ObjectShortName">valid</obj_property>
+   <wvobject fp_name="/tb_soc_top/uut/periph_clk" type="logic">
+      <obj_property name="ElementShortName">periph_clk</obj_property>
+      <obj_property name="ObjectShortName">periph_clk</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/rdata" type="array">
-      <obj_property name="ElementShortName">rdata[31:0]</obj_property>
-      <obj_property name="ObjectShortName">rdata[31:0]</obj_property>
+   <wvobject fp_name="/tb_soc_top/uut/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/ready" type="logic">
-      <obj_property name="ElementShortName">ready</obj_property>
-      <obj_property name="ObjectShortName">ready</obj_property>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_toggle" type="logic">
+      <obj_property name="ElementShortName">gpio_toggle</obj_property>
+      <obj_property name="ObjectShortName">gpio_toggle</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/error" type="logic">
-      <obj_property name="ElementShortName">error</obj_property>
-      <obj_property name="ObjectShortName">error</obj_property>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_out" type="array">
+      <obj_property name="ElementShortName">gpio_out[3:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_out[3:0]</obj_property>
    </wvobject>
-   <wvobject fp_name="/tb_timer/irq" type="logic">
-      <obj_property name="ElementShortName">irq</obj_property>
-      <obj_property name="ObjectShortName">irq</obj_property>
+   <wvobject fp_name="/tb_soc_top/uut/uart_tx" type="logic">
+      <obj_property name="ElementShortName">uart_tx</obj_property>
+      <obj_property name="ObjectShortName">uart_tx</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/rst_core" type="logic">
+      <obj_property name="ElementShortName">rst_core</obj_property>
+      <obj_property name="ObjectShortName">rst_core</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/rst_periph" type="logic">
+      <obj_property name="ElementShortName">rst_periph</obj_property>
+      <obj_property name="ObjectShortName">rst_periph</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/instr_addr" type="array">
+      <obj_property name="ElementShortName">instr_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/instr_rdata" type="array">
+      <obj_property name="ElementShortName">instr_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_addr" type="array">
+      <obj_property name="ElementShortName">cpu_bus_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_wdata" type="array">
+      <obj_property name="ElementShortName">cpu_bus_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_wstrb" type="array">
+      <obj_property name="ElementShortName">cpu_bus_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_write" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_write</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_read" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_read</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_valid" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_valid</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_rdata" type="array">
+      <obj_property name="ElementShortName">cpu_bus_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_ready" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_ready</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_error" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_error</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_addr" type="array">
+      <obj_property name="ElementShortName">dma_m_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_wdata" type="array">
+      <obj_property name="ElementShortName">dma_m_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_wstrb" type="array">
+      <obj_property name="ElementShortName">dma_m_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_write" type="logic">
+      <obj_property name="ElementShortName">dma_m_write</obj_property>
+      <obj_property name="ObjectShortName">dma_m_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_read" type="logic">
+      <obj_property name="ElementShortName">dma_m_read</obj_property>
+      <obj_property name="ObjectShortName">dma_m_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_valid" type="logic">
+      <obj_property name="ElementShortName">dma_m_valid</obj_property>
+      <obj_property name="ObjectShortName">dma_m_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_rdata" type="array">
+      <obj_property name="ElementShortName">dma_m_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_ready" type="logic">
+      <obj_property name="ElementShortName">dma_m_ready</obj_property>
+      <obj_property name="ObjectShortName">dma_m_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_error" type="logic">
+      <obj_property name="ElementShortName">dma_m_error</obj_property>
+      <obj_property name="ObjectShortName">dma_m_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_active" type="logic">
+      <obj_property name="ElementShortName">dma_active</obj_property>
+      <obj_property name="ObjectShortName">dma_active</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_addr" type="array">
+      <obj_property name="ElementShortName">bus_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">bus_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_wdata" type="array">
+      <obj_property name="ElementShortName">bus_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">bus_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_wstrb" type="array">
+      <obj_property name="ElementShortName">bus_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">bus_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_write" type="logic">
+      <obj_property name="ElementShortName">bus_write</obj_property>
+      <obj_property name="ObjectShortName">bus_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_read" type="logic">
+      <obj_property name="ElementShortName">bus_read</obj_property>
+      <obj_property name="ObjectShortName">bus_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_valid" type="logic">
+      <obj_property name="ElementShortName">bus_valid</obj_property>
+      <obj_property name="ObjectShortName">bus_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_sel" type="logic">
+      <obj_property name="ElementShortName">ram_sel</obj_property>
+      <obj_property name="ObjectShortName">ram_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_sel" type="logic">
+      <obj_property name="ElementShortName">gpio_sel</obj_property>
+      <obj_property name="ObjectShortName">gpio_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_sel" type="logic">
+      <obj_property name="ElementShortName">timer_sel</obj_property>
+      <obj_property name="ObjectShortName">timer_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_sel" type="logic">
+      <obj_property name="ElementShortName">uart_sel</obj_property>
+      <obj_property name="ObjectShortName">uart_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_sel" type="logic">
+      <obj_property name="ElementShortName">dma_sel</obj_property>
+      <obj_property name="ObjectShortName">dma_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_addr" type="array">
+      <obj_property name="ElementShortName">ram_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_addr" type="array">
+      <obj_property name="ElementShortName">gpio_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_addr" type="array">
+      <obj_property name="ElementShortName">timer_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_addr" type="array">
+      <obj_property name="ElementShortName">uart_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_addr" type="array">
+      <obj_property name="ElementShortName">dma_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_wdata" type="array">
+      <obj_property name="ElementShortName">ram_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_wdata" type="array">
+      <obj_property name="ElementShortName">gpio_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_wdata" type="array">
+      <obj_property name="ElementShortName">timer_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_wdata" type="array">
+      <obj_property name="ElementShortName">uart_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_wdata" type="array">
+      <obj_property name="ElementShortName">dma_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_wstrb" type="array">
+      <obj_property name="ElementShortName">ram_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_wstrb" type="array">
+      <obj_property name="ElementShortName">gpio_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_wstrb" type="array">
+      <obj_property name="ElementShortName">timer_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_wstrb" type="array">
+      <obj_property name="ElementShortName">uart_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_wstrb" type="array">
+      <obj_property name="ElementShortName">dma_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_write" type="logic">
+      <obj_property name="ElementShortName">ram_write</obj_property>
+      <obj_property name="ObjectShortName">ram_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_write" type="logic">
+      <obj_property name="ElementShortName">gpio_write</obj_property>
+      <obj_property name="ObjectShortName">gpio_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_write" type="logic">
+      <obj_property name="ElementShortName">timer_write</obj_property>
+      <obj_property name="ObjectShortName">timer_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_write" type="logic">
+      <obj_property name="ElementShortName">uart_write</obj_property>
+      <obj_property name="ObjectShortName">uart_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_write_s" type="logic">
+      <obj_property name="ElementShortName">dma_write_s</obj_property>
+      <obj_property name="ObjectShortName">dma_write_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_read" type="logic">
+      <obj_property name="ElementShortName">ram_read</obj_property>
+      <obj_property name="ObjectShortName">ram_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_read" type="logic">
+      <obj_property name="ElementShortName">gpio_read</obj_property>
+      <obj_property name="ObjectShortName">gpio_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_read" type="logic">
+      <obj_property name="ElementShortName">timer_read</obj_property>
+      <obj_property name="ObjectShortName">timer_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_read" type="logic">
+      <obj_property name="ElementShortName">uart_read</obj_property>
+      <obj_property name="ObjectShortName">uart_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_read_s" type="logic">
+      <obj_property name="ElementShortName">dma_read_s</obj_property>
+      <obj_property name="ObjectShortName">dma_read_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_valid" type="logic">
+      <obj_property name="ElementShortName">ram_valid</obj_property>
+      <obj_property name="ObjectShortName">ram_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_valid" type="logic">
+      <obj_property name="ElementShortName">gpio_valid</obj_property>
+      <obj_property name="ObjectShortName">gpio_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_valid" type="logic">
+      <obj_property name="ElementShortName">timer_valid</obj_property>
+      <obj_property name="ObjectShortName">timer_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_valid" type="logic">
+      <obj_property name="ElementShortName">uart_valid</obj_property>
+      <obj_property name="ObjectShortName">uart_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_valid_s" type="logic">
+      <obj_property name="ElementShortName">dma_valid_s</obj_property>
+      <obj_property name="ObjectShortName">dma_valid_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_rdata" type="array">
+      <obj_property name="ElementShortName">ram_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_rdata" type="array">
+      <obj_property name="ElementShortName">gpio_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_rdata" type="array">
+      <obj_property name="ElementShortName">timer_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_rdata" type="array">
+      <obj_property name="ElementShortName">uart_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_rdata" type="array">
+      <obj_property name="ElementShortName">dma_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_ready" type="logic">
+      <obj_property name="ElementShortName">ram_ready</obj_property>
+      <obj_property name="ObjectShortName">ram_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_ready" type="logic">
+      <obj_property name="ElementShortName">gpio_ready</obj_property>
+      <obj_property name="ObjectShortName">gpio_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_ready" type="logic">
+      <obj_property name="ElementShortName">timer_ready</obj_property>
+      <obj_property name="ObjectShortName">timer_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_ready" type="logic">
+      <obj_property name="ElementShortName">uart_ready</obj_property>
+      <obj_property name="ObjectShortName">uart_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_ready_s" type="logic">
+      <obj_property name="ElementShortName">dma_ready_s</obj_property>
+      <obj_property name="ObjectShortName">dma_ready_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_error" type="logic">
+      <obj_property name="ElementShortName">ram_error</obj_property>
+      <obj_property name="ObjectShortName">ram_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_error" type="logic">
+      <obj_property name="ElementShortName">gpio_error</obj_property>
+      <obj_property name="ObjectShortName">gpio_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_error" type="logic">
+      <obj_property name="ElementShortName">timer_error</obj_property>
+      <obj_property name="ObjectShortName">timer_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_error" type="logic">
+      <obj_property name="ElementShortName">uart_error</obj_property>
+      <obj_property name="ObjectShortName">uart_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_error_s" type="logic">
+      <obj_property name="ElementShortName">dma_error_s</obj_property>
+      <obj_property name="ObjectShortName">dma_error_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_irq" type="logic">
+      <obj_property name="ElementShortName">timer_irq</obj_property>
+      <obj_property name="ObjectShortName">timer_irq</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_irq" type="logic">
+      <obj_property name="ElementShortName">dma_irq</obj_property>
+      <obj_property name="ObjectShortName">dma_irq</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/clk" type="logic">
+      <obj_property name="ElementShortName">clk</obj_property>
+      <obj_property name="ObjectShortName">clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/periph_clk" type="logic">
+      <obj_property name="ElementShortName">periph_clk</obj_property>
+      <obj_property name="ObjectShortName">periph_clk</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/rst" type="logic">
+      <obj_property name="ElementShortName">rst</obj_property>
+      <obj_property name="ObjectShortName">rst</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_toggle" type="logic">
+      <obj_property name="ElementShortName">gpio_toggle</obj_property>
+      <obj_property name="ObjectShortName">gpio_toggle</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_out" type="array">
+      <obj_property name="ElementShortName">gpio_out[3:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_out[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_tx" type="logic">
+      <obj_property name="ElementShortName">uart_tx</obj_property>
+      <obj_property name="ObjectShortName">uart_tx</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/rst_core" type="logic">
+      <obj_property name="ElementShortName">rst_core</obj_property>
+      <obj_property name="ObjectShortName">rst_core</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/rst_periph" type="logic">
+      <obj_property name="ElementShortName">rst_periph</obj_property>
+      <obj_property name="ObjectShortName">rst_periph</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/instr_addr" type="array">
+      <obj_property name="ElementShortName">instr_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/instr_rdata" type="array">
+      <obj_property name="ElementShortName">instr_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">instr_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_addr" type="array">
+      <obj_property name="ElementShortName">cpu_bus_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_wdata" type="array">
+      <obj_property name="ElementShortName">cpu_bus_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_wstrb" type="array">
+      <obj_property name="ElementShortName">cpu_bus_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_write" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_write</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_read" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_read</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_valid" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_valid</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_rdata" type="array">
+      <obj_property name="ElementShortName">cpu_bus_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_ready" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_ready</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/cpu_bus_error" type="logic">
+      <obj_property name="ElementShortName">cpu_bus_error</obj_property>
+      <obj_property name="ObjectShortName">cpu_bus_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_addr" type="array">
+      <obj_property name="ElementShortName">dma_m_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_wdata" type="array">
+      <obj_property name="ElementShortName">dma_m_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_wstrb" type="array">
+      <obj_property name="ElementShortName">dma_m_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_write" type="logic">
+      <obj_property name="ElementShortName">dma_m_write</obj_property>
+      <obj_property name="ObjectShortName">dma_m_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_read" type="logic">
+      <obj_property name="ElementShortName">dma_m_read</obj_property>
+      <obj_property name="ObjectShortName">dma_m_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_valid" type="logic">
+      <obj_property name="ElementShortName">dma_m_valid</obj_property>
+      <obj_property name="ObjectShortName">dma_m_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_rdata" type="array">
+      <obj_property name="ElementShortName">dma_m_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_m_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_ready" type="logic">
+      <obj_property name="ElementShortName">dma_m_ready</obj_property>
+      <obj_property name="ObjectShortName">dma_m_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_m_error" type="logic">
+      <obj_property name="ElementShortName">dma_m_error</obj_property>
+      <obj_property name="ObjectShortName">dma_m_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_active" type="logic">
+      <obj_property name="ElementShortName">dma_active</obj_property>
+      <obj_property name="ObjectShortName">dma_active</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_addr" type="array">
+      <obj_property name="ElementShortName">bus_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">bus_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_wdata" type="array">
+      <obj_property name="ElementShortName">bus_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">bus_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_wstrb" type="array">
+      <obj_property name="ElementShortName">bus_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">bus_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_write" type="logic">
+      <obj_property name="ElementShortName">bus_write</obj_property>
+      <obj_property name="ObjectShortName">bus_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_read" type="logic">
+      <obj_property name="ElementShortName">bus_read</obj_property>
+      <obj_property name="ObjectShortName">bus_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/bus_valid" type="logic">
+      <obj_property name="ElementShortName">bus_valid</obj_property>
+      <obj_property name="ObjectShortName">bus_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/fabric_rdata" type="array">
+      <obj_property name="ElementShortName">fabric_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">fabric_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/fabric_ready" type="logic">
+      <obj_property name="ElementShortName">fabric_ready</obj_property>
+      <obj_property name="ObjectShortName">fabric_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/fabric_error" type="logic">
+      <obj_property name="ElementShortName">fabric_error</obj_property>
+      <obj_property name="ObjectShortName">fabric_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_sel" type="logic">
+      <obj_property name="ElementShortName">ram_sel</obj_property>
+      <obj_property name="ObjectShortName">ram_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_sel" type="logic">
+      <obj_property name="ElementShortName">gpio_sel</obj_property>
+      <obj_property name="ObjectShortName">gpio_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_sel" type="logic">
+      <obj_property name="ElementShortName">timer_sel</obj_property>
+      <obj_property name="ObjectShortName">timer_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_sel" type="logic">
+      <obj_property name="ElementShortName">uart_sel</obj_property>
+      <obj_property name="ObjectShortName">uart_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_sel" type="logic">
+      <obj_property name="ElementShortName">dma_sel</obj_property>
+      <obj_property name="ObjectShortName">dma_sel</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_addr" type="array">
+      <obj_property name="ElementShortName">ram_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_addr" type="array">
+      <obj_property name="ElementShortName">gpio_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_addr" type="array">
+      <obj_property name="ElementShortName">timer_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_addr" type="array">
+      <obj_property name="ElementShortName">uart_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_addr" type="array">
+      <obj_property name="ElementShortName">dma_addr[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_addr[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_wdata" type="array">
+      <obj_property name="ElementShortName">ram_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_wdata" type="array">
+      <obj_property name="ElementShortName">gpio_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_wdata" type="array">
+      <obj_property name="ElementShortName">timer_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_wdata" type="array">
+      <obj_property name="ElementShortName">uart_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_wdata" type="array">
+      <obj_property name="ElementShortName">dma_wdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_wdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_wstrb" type="array">
+      <obj_property name="ElementShortName">ram_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_wstrb" type="array">
+      <obj_property name="ElementShortName">gpio_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_wstrb" type="array">
+      <obj_property name="ElementShortName">timer_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_wstrb" type="array">
+      <obj_property name="ElementShortName">uart_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_wstrb" type="array">
+      <obj_property name="ElementShortName">dma_wstrb[3:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_wstrb[3:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_write" type="logic">
+      <obj_property name="ElementShortName">ram_write</obj_property>
+      <obj_property name="ObjectShortName">ram_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_write" type="logic">
+      <obj_property name="ElementShortName">gpio_write</obj_property>
+      <obj_property name="ObjectShortName">gpio_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_write" type="logic">
+      <obj_property name="ElementShortName">timer_write</obj_property>
+      <obj_property name="ObjectShortName">timer_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_write" type="logic">
+      <obj_property name="ElementShortName">uart_write</obj_property>
+      <obj_property name="ObjectShortName">uart_write</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_write_s" type="logic">
+      <obj_property name="ElementShortName">dma_write_s</obj_property>
+      <obj_property name="ObjectShortName">dma_write_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_read" type="logic">
+      <obj_property name="ElementShortName">ram_read</obj_property>
+      <obj_property name="ObjectShortName">ram_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_read" type="logic">
+      <obj_property name="ElementShortName">gpio_read</obj_property>
+      <obj_property name="ObjectShortName">gpio_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_read" type="logic">
+      <obj_property name="ElementShortName">timer_read</obj_property>
+      <obj_property name="ObjectShortName">timer_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_read" type="logic">
+      <obj_property name="ElementShortName">uart_read</obj_property>
+      <obj_property name="ObjectShortName">uart_read</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_read_s" type="logic">
+      <obj_property name="ElementShortName">dma_read_s</obj_property>
+      <obj_property name="ObjectShortName">dma_read_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_valid" type="logic">
+      <obj_property name="ElementShortName">ram_valid</obj_property>
+      <obj_property name="ObjectShortName">ram_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_valid" type="logic">
+      <obj_property name="ElementShortName">gpio_valid</obj_property>
+      <obj_property name="ObjectShortName">gpio_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_valid" type="logic">
+      <obj_property name="ElementShortName">timer_valid</obj_property>
+      <obj_property name="ObjectShortName">timer_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_valid" type="logic">
+      <obj_property name="ElementShortName">uart_valid</obj_property>
+      <obj_property name="ObjectShortName">uart_valid</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_valid_s" type="logic">
+      <obj_property name="ElementShortName">dma_valid_s</obj_property>
+      <obj_property name="ObjectShortName">dma_valid_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_rdata" type="array">
+      <obj_property name="ElementShortName">ram_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">ram_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_rdata" type="array">
+      <obj_property name="ElementShortName">gpio_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">gpio_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_rdata" type="array">
+      <obj_property name="ElementShortName">timer_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">timer_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_rdata" type="array">
+      <obj_property name="ElementShortName">uart_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">uart_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_rdata" type="array">
+      <obj_property name="ElementShortName">dma_rdata[31:0]</obj_property>
+      <obj_property name="ObjectShortName">dma_rdata[31:0]</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_ready" type="logic">
+      <obj_property name="ElementShortName">ram_ready</obj_property>
+      <obj_property name="ObjectShortName">ram_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_ready" type="logic">
+      <obj_property name="ElementShortName">gpio_ready</obj_property>
+      <obj_property name="ObjectShortName">gpio_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_ready" type="logic">
+      <obj_property name="ElementShortName">timer_ready</obj_property>
+      <obj_property name="ObjectShortName">timer_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_ready" type="logic">
+      <obj_property name="ElementShortName">uart_ready</obj_property>
+      <obj_property name="ObjectShortName">uart_ready</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_ready_s" type="logic">
+      <obj_property name="ElementShortName">dma_ready_s</obj_property>
+      <obj_property name="ObjectShortName">dma_ready_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/ram_error" type="logic">
+      <obj_property name="ElementShortName">ram_error</obj_property>
+      <obj_property name="ObjectShortName">ram_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/gpio_error" type="logic">
+      <obj_property name="ElementShortName">gpio_error</obj_property>
+      <obj_property name="ObjectShortName">gpio_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_error" type="logic">
+      <obj_property name="ElementShortName">timer_error</obj_property>
+      <obj_property name="ObjectShortName">timer_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/uart_error" type="logic">
+      <obj_property name="ElementShortName">uart_error</obj_property>
+      <obj_property name="ObjectShortName">uart_error</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_error_s" type="logic">
+      <obj_property name="ElementShortName">dma_error_s</obj_property>
+      <obj_property name="ObjectShortName">dma_error_s</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/timer_irq" type="logic">
+      <obj_property name="ElementShortName">timer_irq</obj_property>
+      <obj_property name="ObjectShortName">timer_irq</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/dma_irq" type="logic">
+      <obj_property name="ElementShortName">dma_irq</obj_property>
+      <obj_property name="ObjectShortName">dma_irq</obj_property>
+   </wvobject>
+   <wvobject fp_name="/tb_soc_top/uut/irq_combined" type="logic">
+      <obj_property name="ElementShortName">irq_combined</obj_property>
+      <obj_property name="ObjectShortName">irq_combined</obj_property>
    </wvobject>
 </wave_config>
