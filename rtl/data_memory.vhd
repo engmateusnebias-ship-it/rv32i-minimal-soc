@@ -6,30 +6,37 @@ use IEEE.NUMERIC_STD.ALL;
 -- Addressing is byte-based; internally word index uses addr[9:2].
 entity data_memory is
     Port (
-        clk       : in  std_logic;
-        we        : in  std_logic;
-        re        : in  std_logic;
-        addr      : in  std_logic_vector(31 downto 0);
-        wdata     : in  std_logic_vector(31 downto 0);
-        wstrb     : in  std_logic_vector(3 downto 0);
-        rdata     : out std_logic_vector(31 downto 0)
+        clk         : in  std_logic;
+        rst         : in  std_logic;
+
+        -- Slave bus interface
+        sel         : in  std_logic;
+        addr        : in  std_logic_vector(31 downto 0);
+        wdata       : in  std_logic_vector(31 downto 0);
+        wstrb       : in  std_logic_vector(3 downto 0);
+        write_en    : in  std_logic;
+        read_en     : in  std_logic;
+        valid       : in  std_logic;
+        rdata       : out std_logic_vector(31 downto 0);
+        ready       : out std_logic;
+        error       : out std_logic
     );
 end data_memory;
 
 architecture rtl of data_memory is
     type ram_type is array (0 to 255) of std_logic_vector(31 downto 0);
-    signal ram : ram_type := (others => (others => '0'));
-    signal idx : integer range 0 to 255;
-    signal word_q : std_logic_vector(31 downto 0);
+    signal ram      : ram_type := (others => (others => '0'));
+    signal idx      : integer range 0 to 255;
+    signal bus_hit  : std_logic;
 begin
-    idx <= to_integer(unsigned(addr(9 downto 2)));
+    idx     <= to_integer(unsigned(addr(9 downto 2)));
+    bus_hit <= sel and valid;
 
-    -- Synchronous write with byte enables
     process(clk)
         variable tmp : std_logic_vector(31 downto 0);
     begin
         if rising_edge(clk) then
-            if we = '1' then
+            if bus_hit = '1' and write_en = '1' then
                 tmp := ram(idx);
                 if wstrb(0) = '1' then tmp(7 downto 0)   := wdata(7 downto 0); end if;
                 if wstrb(1) = '1' then tmp(15 downto 8)  := wdata(15 downto 8); end if;
@@ -40,14 +47,20 @@ begin
         end if;
     end process;
 
-    -- Combinational read (single-cycle)
-    -- VHDL-93/VHDL-2002 compatible combinational process (no process(all)).
-    process(re, idx, ram)
+    process(bus_hit, read_en, idx, ram)
     begin
-        if re = '1' then
+        if bus_hit = '1' and read_en = '1' then
             rdata <= ram(idx);
         else
             rdata <= (others => '0');
         end if;
+    end process;
+
+    ready <= bus_hit;
+    error <= '0';
+
+    unused_rst: process(rst)
+    begin
+        null;
     end process;
 end rtl;

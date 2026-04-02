@@ -1,91 +1,207 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
+use IEEE.NUMERIC_STD.ALL;
 
--- Simple single-cycle interconnect for memory-mapped peripherals.
--- Address map (byte addresses):
---  - 0x0000_0000 .. 0x0000_03FF : Data RAM (256 words)
---  - 0x0000_0010 : GPIO_OUT (write)
---  - 0x0000_0014 : GPIO_IN  (read)
---  - 0x0000_0020 : TIMER_COUNT (read)
---  - 0x0000_0024 : TIMER_CMP   (read/write)
---  - 0x0000_0028 : TIMER_CTRL  (read/write)
 entity bus_interconnect is
     Port (
-        -- CPU bus
-        addr        : in  std_logic_vector(31 downto 0);
-        we          : in  std_logic;
-        re          : in  std_logic;
-        wdata       : in  std_logic_vector(31 downto 0);
-        wstrb       : in  std_logic_vector(3 downto 0);
-        rdata       : out std_logic_vector(31 downto 0);
+        m_addr       : in  std_logic_vector(31 downto 0);
+        m_wdata      : in  std_logic_vector(31 downto 0);
+        m_wstrb      : in  std_logic_vector(3 downto 0);
+        m_write      : in  std_logic;
+        m_read       : in  std_logic;
+        m_valid      : in  std_logic;
+        m_rdata      : out std_logic_vector(31 downto 0);
+        m_ready      : out std_logic;
+        m_error      : out std_logic;
 
-        -- Data RAM
-        ram_we      : out std_logic;
-        ram_re      : out std_logic;
-        ram_addr    : out std_logic_vector(31 downto 0);
-        ram_wdata   : out std_logic_vector(31 downto 0);
-        ram_wstrb   : out std_logic_vector(3 downto 0);
-        ram_rdata   : in  std_logic_vector(31 downto 0);
+        ram_sel      : out std_logic;
+        ram_addr     : out std_logic_vector(31 downto 0);
+        ram_wdata    : out std_logic_vector(31 downto 0);
+        ram_wstrb    : out std_logic_vector(3 downto 0);
+        ram_write    : out std_logic;
+        ram_read     : out std_logic;
+        ram_valid    : out std_logic;
+        ram_rdata    : in  std_logic_vector(31 downto 0);
+        ram_ready    : in  std_logic;
+        ram_error    : in  std_logic;
 
-        -- GPIO
-        gpio_we     : out std_logic;
-        gpio_re     : out std_logic;
-        gpio_addr   : out std_logic_vector(31 downto 0);
-        gpio_wdata  : out std_logic_vector(31 downto 0);
-        gpio_wstrb  : out std_logic_vector(3 downto 0);
-        gpio_rdata  : in  std_logic_vector(31 downto 0);
+        gpio_sel     : out std_logic;
+        gpio_addr    : out std_logic_vector(31 downto 0);
+        gpio_wdata   : out std_logic_vector(31 downto 0);
+        gpio_wstrb   : out std_logic_vector(3 downto 0);
+        gpio_write   : out std_logic;
+        gpio_read    : out std_logic;
+        gpio_valid   : out std_logic;
+        gpio_rdata   : in  std_logic_vector(31 downto 0);
+        gpio_ready   : in  std_logic;
+        gpio_error   : in  std_logic;
 
-        -- TIMER
-        timer_we    : out std_logic;
-        timer_re    : out std_logic;
-        timer_addr  : out std_logic_vector(31 downto 0);
-        timer_wdata : out std_logic_vector(31 downto 0);
-        timer_wstrb : out std_logic_vector(3 downto 0);
-        timer_rdata : in  std_logic_vector(31 downto 0)
+        timer_sel    : out std_logic;
+        timer_addr   : out std_logic_vector(31 downto 0);
+        timer_wdata  : out std_logic_vector(31 downto 0);
+        timer_wstrb  : out std_logic_vector(3 downto 0);
+        timer_write  : out std_logic;
+        timer_read   : out std_logic;
+        timer_valid  : out std_logic;
+        timer_rdata  : in  std_logic_vector(31 downto 0);
+        timer_ready  : in  std_logic;
+        timer_error  : in  std_logic;
+
+        uart_sel     : out std_logic;
+        uart_addr    : out std_logic_vector(31 downto 0);
+        uart_wdata   : out std_logic_vector(31 downto 0);
+        uart_wstrb   : out std_logic_vector(3 downto 0);
+        uart_write   : out std_logic;
+        uart_read    : out std_logic;
+        uart_valid   : out std_logic;
+        uart_rdata   : in  std_logic_vector(31 downto 0);
+        uart_ready   : in  std_logic;
+        uart_error   : in  std_logic;
+
+        dma_sel      : out std_logic;
+        dma_addr     : out std_logic_vector(31 downto 0);
+        dma_wdata    : out std_logic_vector(31 downto 0);
+        dma_wstrb    : out std_logic_vector(3 downto 0);
+        dma_write    : out std_logic;
+        dma_read     : out std_logic;
+        dma_valid    : out std_logic;
+        dma_rdata    : in  std_logic_vector(31 downto 0);
+        dma_ready    : in  std_logic;
+        dma_error    : in  std_logic
     );
 end bus_interconnect;
 
 architecture rtl of bus_interconnect is
-    signal is_ram   : std_logic;
-    signal is_gpio  : std_logic;
-    signal is_timer : std_logic;
+    signal dec_ram      : std_logic;
+    signal dec_gpio     : std_logic;
+    signal dec_timer    : std_logic;
+    signal dec_uart     : std_logic;
+    signal dec_dma      : std_logic;
+    signal dec_invalid  : std_logic;
+    signal ram_region   : std_logic;
 begin
-    -- Decode (simple, exact match for GPIO/TIMER registers)
-    is_gpio  <= '1' when (addr = x"00000010" or addr = x"00000014") else '0';
-    is_timer <= '1' when (addr = x"00000020" or addr = x"00000024" or addr = x"00000028") else '0';
-    is_ram   <= '1' when (is_gpio = '0' and is_timer = '0') else '0';
+    dec_gpio <= '1' when (
+        m_valid = '1' and
+        unsigned(m_addr) >= to_unsigned(16#10#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#1F#, 32)
+    ) else '0';
 
-    -- Fanout
-    ram_addr  <= addr;
-    ram_wdata <= wdata;
-    ram_wstrb <= wstrb;
-    ram_we    <= we and is_ram;
-    ram_re    <= re and is_ram;
+    dec_timer <= '1' when (
+        m_valid = '1' and
+        unsigned(m_addr) >= to_unsigned(16#20#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#2F#, 32)
+    ) else '0';
 
-    gpio_addr  <= addr;
-    gpio_wdata <= wdata;
-    gpio_wstrb <= wstrb;
-    gpio_we    <= we and is_gpio;
-    gpio_re    <= re and is_gpio;
+    dec_uart <= '1' when (
+        m_valid = '1' and
+        unsigned(m_addr) >= to_unsigned(16#40#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#4F#, 32)
+    ) else '0';
 
-    timer_addr  <= addr;
-    timer_wdata <= wdata;
-    timer_wstrb <= wstrb;
-    timer_we    <= we and is_timer;
-    timer_re    <= re and is_timer;
+    dec_dma <= '1' when (
+        m_valid = '1' and
+        unsigned(m_addr) >= to_unsigned(16#80#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#9F#, 32)
+    ) else '0';
 
-    -- Read mux
-    -- VHDL-93/VHDL-2002 compatible combinational process (no process(all)).
-    process(re, addr, is_gpio, is_timer, gpio_rdata, timer_rdata, ram_rdata)
+    ram_region <= '1' when unsigned(m_addr) <= to_unsigned(16#3FF#, 32) else '0';
+
+    dec_ram <= '1' when (
+        m_valid = '1' and
+        ram_region = '1' and
+        dec_gpio = '0' and
+        dec_timer = '0' and
+        dec_uart = '0' and
+        dec_dma = '0'
+    ) else '0';
+
+    dec_invalid <= '1' when (
+        m_valid = '1' and
+        dec_ram = '0' and
+        dec_gpio = '0' and
+        dec_timer = '0' and
+        dec_uart = '0' and
+        dec_dma = '0'
+    ) else '0';
+
+    ram_addr   <= m_addr;
+    ram_wdata  <= m_wdata;
+    ram_wstrb  <= m_wstrb;
+    ram_write  <= m_write and dec_ram;
+    ram_read   <= m_read  and dec_ram;
+    ram_valid  <= m_valid and dec_ram;
+    ram_sel    <= dec_ram;
+
+    gpio_addr  <= m_addr;
+    gpio_wdata <= m_wdata;
+    gpio_wstrb <= m_wstrb;
+    gpio_write <= m_write and dec_gpio;
+    gpio_read  <= m_read  and dec_gpio;
+    gpio_valid <= m_valid and dec_gpio;
+    gpio_sel   <= dec_gpio;
+
+    timer_addr  <= m_addr;
+    timer_wdata <= m_wdata;
+    timer_wstrb <= m_wstrb;
+    timer_write <= m_write and dec_timer;
+    timer_read  <= m_read  and dec_timer;
+    timer_valid <= m_valid and dec_timer;
+    timer_sel   <= dec_timer;
+
+    uart_addr  <= m_addr;
+    uart_wdata <= m_wdata;
+    uart_wstrb <= m_wstrb;
+    uart_write <= m_write and dec_uart;
+    uart_read  <= m_read  and dec_uart;
+    uart_valid <= m_valid and dec_uart;
+    uart_sel   <= dec_uart;
+
+    dma_addr   <= m_addr;
+    dma_wdata  <= m_wdata;
+    dma_wstrb  <= m_wstrb;
+    dma_write  <= m_write and dec_dma;
+    dma_read   <= m_read  and dec_dma;
+    dma_valid  <= m_valid and dec_dma;
+    dma_sel    <= dec_dma;
+
+    process(
+        m_valid, dec_ram, dec_gpio, dec_timer, dec_uart, dec_dma, dec_invalid,
+        ram_rdata, ram_ready, ram_error,
+        gpio_rdata, gpio_ready, gpio_error,
+        timer_rdata, timer_ready, timer_error,
+        uart_rdata, uart_ready, uart_error,
+        dma_rdata, dma_ready, dma_error
+    )
     begin
-        rdata <= (others => '0');
-        if re = '1' then
-            if is_gpio = '1' then
-                rdata <= gpio_rdata;
-            elsif is_timer = '1' then
-                rdata <= timer_rdata;
-            else
-                rdata <= ram_rdata;
+        m_rdata <= (others => '0');
+        m_ready <= '0';
+        m_error <= '0';
+
+        if m_valid = '1' then
+            if dec_ram = '1' then
+                m_rdata <= ram_rdata;
+                m_ready <= ram_ready;
+                m_error <= ram_error;
+            elsif dec_gpio = '1' then
+                m_rdata <= gpio_rdata;
+                m_ready <= gpio_ready;
+                m_error <= gpio_error;
+            elsif dec_timer = '1' then
+                m_rdata <= timer_rdata;
+                m_ready <= timer_ready;
+                m_error <= timer_error;
+            elsif dec_uart = '1' then
+                m_rdata <= uart_rdata;
+                m_ready <= uart_ready;
+                m_error <= uart_error;
+            elsif dec_dma = '1' then
+                m_rdata <= dma_rdata;
+                m_ready <= dma_ready;
+                m_error <= dma_error;
+            elsif dec_invalid = '1' then
+                m_rdata <= (others => '0');
+                m_ready <= '1';
+                m_error <= '1';
             end if;
         end if;
     end process;
