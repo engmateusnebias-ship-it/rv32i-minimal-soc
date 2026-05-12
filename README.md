@@ -34,6 +34,26 @@ gpio_toggle ------>|   MMCM (internal) --> periph_clk (28.8 MHz)|
                    +--------------------------------------------+
 ```
 
+## RV32I Core
+
+Single-cycle implementation of the base RV32I ISA. The datapath is entirely combinational between the Program Counter and the Register File. The five phases (Fetch, Decode, Execute, Memory, Writeback) are conceptual divisions of a single combinational path, not pipeline stages.
+
+| Module                    | Function                                                                    |
+|---------------------------|-----------------------------------------------------------------------------|
+| `program_counter.vhd`     | PC with synchronous reset                                                   |
+| `instruction_memory.vhd`  | ROM initialized from `program.mem` at elaboration                           |
+| `control_unit.vhd`        | Full RV32I decoder: R/I/S/B/U/J, FENCE, ECALL, EBREAK                      |
+| `alu_control.vhd`         | Translates opcode/funct3/funct7 to 4-bit ALU operation                      |
+| `alu.vhd`                 | 11 operations: ADD, SUB, LUI, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND      |
+| `register_file.vhd`       | 32 registers, x0 hardwired zero, combinational read                         |
+| `immediate_generator.vhd` | Sign-extension for all immediate formats                                    |
+| `branch_compare.vhd`      | BEQ / BNE / BLT / BGE / BLTU / BGEU                                        |
+| `load_store_unit.vhd`     | Byte enables, alignment, sign/zero-extend (LB/LH/LBU/LHU/LW)              |
+| `trap_unit.vhd`           | Prioritized exceptions: misaligned fetch > misaligned LS > illegal > ECALL |
+
+---
+
+
 ### Clock Domains
 
 | Domain       | Frequency | Source          | Modules                                      |
@@ -52,25 +72,6 @@ The UART uses a toggle handshake with two-FF synchronizers in each direction for
 | 9600      | 2999            |
 | 115200    | 249             |
 | 230400    | 124             |
-
----
-
-## RV32I Core
-
-Single-cycle implementation of the base RV32I ISA. The datapath is entirely combinational between the Program Counter and the Register File. The five phases (Fetch, Decode, Execute, Memory, Writeback) are conceptual divisions of a single combinational path, not pipeline stages.
-
-| Module                    | Function                                                                    |
-|---------------------------|-----------------------------------------------------------------------------|
-| `program_counter.vhd`     | PC with synchronous reset                                                   |
-| `instruction_memory.vhd`  | ROM initialized from `program.mem` at elaboration                           |
-| `control_unit.vhd`        | Full RV32I decoder: R/I/S/B/U/J, FENCE, ECALL, EBREAK                      |
-| `alu_control.vhd`         | Translates opcode/funct3/funct7 to 4-bit ALU operation                      |
-| `alu.vhd`                 | 11 operations: ADD, SUB, LUI, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND      |
-| `register_file.vhd`       | 32 registers, x0 hardwired zero, combinational read                         |
-| `immediate_generator.vhd` | Sign-extension for all immediate formats                                    |
-| `branch_compare.vhd`      | BEQ / BNE / BLT / BGE / BLTU / BGEU                                        |
-| `load_store_unit.vhd`     | Byte enables, alignment, sign/zero-extend (LB/LH/LBU/LHU/LW)              |
-| `trap_unit.vhd`           | Prioritized exceptions: misaligned fetch > misaligned LS > illegal > ECALL |
 
 ---
 
