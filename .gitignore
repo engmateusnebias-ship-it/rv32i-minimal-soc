@@ -1,17 +1,29 @@
-*.jou
-*.log
-*.str
-*.pb
-*.xml
-*.runs/
+# Vivado project files (generated, not source)
 *.cache/
 *.hw/
 *.ip_user_files/
+*.runs/
 *.sim/
-*.webtalk/
-*.xpr
-*.xpr~
 *.srcs/
-*.wdb
-*.data/
-*.tmp/
+*.jou
+*.log
+*.str
+*.dcp
+*.bit
+*.ltx
+vivado_*.backup.jou
+vivado_*.backup.log
+.Xil/
+
+# GHDL build artefacts
+build/
+
+# program.mem symlink at root (created by CI, not committed)
+/program.mem
+
+# Editor and OS
+.vscode/
+*.swp
+*~
+Thumbs.db
+.DS_Store
