@@ -1,193 +1,89 @@
-# RV32I Minimal SoC in VHDL
+Mini-SoC RV32I em VHDL
+Desenvolvido por Mateus Telles Nébias
+Implementação de um processador RISC-V RV32I single-cycle e um mini-SoC completo em VHDL sintetizável, desenvolvido do zero como projeto pessoal de arquitetura de computadores e design digital.
 
-A custom **RV32I-based minimal System-on-Chip (SoC)** written in **VHDL**, evolving from a single-cycle CPU into a modular SoC architecture with **memory-mapped peripherals**, **DMA**, **multi-clock domains**, and explicit **clock domain crossing (CDC)** handling.
+Visão geral
+O projeto é um mini-SoC completo centrado em um núcleo RV32I single-cycle. Todos os módulos foram escritos em VHDL RTL puro a partir do zero, sem IP cores de terceiros, exceto pelo primitivo MMCM da Artix-7 usado para geração interna do clock periférico.
+O SoC inclui um barramento interno APB-like, memórias de instrução e dados, GPIO, Timer com IRQ, UART com CDC entre domínios de clock, DMA single-channel com takeover de barramento, e sincronizadores de reset para cada domínio de clock.
 
-This project emphasizes **clean RTL architecture**, **modular design**, and **verification-driven development**, targeting **FPGA**, **RTL**, and **SoC design** roles.
+Arquitetura
+                        +---------------------------+
+            clk ------->|                           |
+   (100 MHz, W5)        |  soc_top                  |
+            rst ------->|                           |
+   gpio_toggle -------->|   MMCM (interno)          |---> periph_clk (28.8 MHz)
+      gpio_out <--------|   rv32i_core              |
+       uart_tx <--------|   instruction_memory      |
+                        |   bus_interconnect        |
+                        |   data_memory             |
+                        |   gpio                    |
+                        |   timer                   |
+                        |   uart  (dual-clock)      |
+                        |   dma                     |
+                        |   reset_synchronizer x2   |
+                        +---------------------------+
+Domínios de clock
+DomínioFrequênciaFonteMódulosclk100 MHzOscilador W5rv32i_core, data_memory, gpio, timer, dma, bus_interconnectperiph_clk28.8 MHzMMCM internoUART TX engine
+O periph_clk é gerado internamente pelo primitivo MMCME2_BASE (M=36, D=5, O=25, VCO=720 MHz). O domínio periférico é mantido em reset até que o sinal LOCKED do MMCM seja asserted. A UART usa um toggle handshake para cruzar dados entre os dois domínios de forma segura, sem FIFO.
+Referência de bauddiv para 28.8 MHz:
+Baud ratebauddiv96002999115200249230400124
 
-## Stable Milestone
+Núcleo RV32I
+Implementação single-cycle do ISA RV32I base. O datapath é inteiramente combinacional entre o Program Counter e o Register File — os cinco "phases" (Fetch, Decode, Execute, Memory, Writeback) são divisões conceituais de um único caminho combinacional, não estágios de pipeline.
+MóduloFunçãoprogram_counter.vhdPC com reset síncronoinstruction_memory.vhdROM inicializada via program.memcontrol_unit.vhdDecodificador completo: R/I/S/B/U/J, FENCE, ECALL, EBREAKalu_control.vhdTraduz opcode/funct3/funct7 para operação ALU de 4 bitsalu.vhd11 operações: ADD, SUB, LUI, SLL, SLT, SLTU, XOR, SRL, SRA, OR, ANDregister_file.vhd32 registradores, x0 hardwired zero, leitura combinacionalimmediate_generator.vhdSign-extension para todos os formatos de imediatobranch_compare.vhdBEQ/BNE/BLT/BGE/BLTU/BGEUload_store_unit.vhdByte enables, alinhamento, sign/zero-extend (LB/LH/LBU/LHU/LW)trap_unit.vhdExceções com prioridade: misaligned fetch > misaligned LS > illegal > ECALL > EBREAK
 
-**Latest stable integration milestone:** `soc_v1_integration_pass`
+Periféricos e barramento
+O barramento interno é APB-like com sinais addr, wdata, wstrb, write, read, valid, rdata, ready, error. O bus_interconnect roteia por endereço e agrega as respostas.
+MóduloBaseRegistradoresdata_memory.vhd0x000RAM de 256 words (1 KiB), byte strobesgpio.vhd0x010GPIO_OUT (RW), GPIO_IN (RO)timer.vhd0x020TIMER_COUNT (RO), TIMER_CMP (RW), TIMER_CTRL (RW)uart.vhd0x040UART_TXDATA (WO), UART_STATUS (RO), UART_CTRL (RW), UART_BAUDDIV (RW)dma.vhd0x080DMA_SRC_ADDR, DMA_DST_ADDR, DMA_LENGTH, DMA_CTRL, DMA_STATUS
+DMA
+Controlador single-channel word-based (32 bits). FSM com 4 estados: IDLE → READ_REQ → WRITE_REQ → DONE. Durante a transferência, o DMA toma posse do barramento via sinal active_o; a CPU fica suspensa. Gera IRQ ao término se irq_enable = '1'.
+UART
+TX-only, formato 8N1, bauddiv programável. Opera no domínio periph_clk (28.8 MHz). A interface de barramento e os registradores de configuração residem no domínio clk. O cruzamento de domínio é feito por toggle handshake com sincronizadores de 2 flip-flops em cada direção.
 
-This tag marks the first fully validated SoC integration including:
-- RV32I core execution from instruction memory
-- memory-mapped GPIO signaling
-- UART transmission
-- DMA RAM-to-RAM transfer
-- SoC-level integration testbench passing successfully
+Mapa de memória
+0x0000_0000 - 0x0000_03FF   Data RAM
+0x0000_0010                 GPIO_OUT        RW
+0x0000_0014                 GPIO_IN         RO
+0x0000_0020                 TIMER_COUNT     RO
+0x0000_0024                 TIMER_CMP       RW
+0x0000_0028                 TIMER_CTRL      RW
+0x0000_0040                 UART_TXDATA     WO
+0x0000_0044                 UART_STATUS     RO
+0x0000_0048                 UART_CTRL       RW
+0x0000_004C                 UART_BAUDDIV    RW
+0x0000_0080                 DMA_SRC_ADDR    RW
+0x0000_0084                 DMA_DST_ADDR    RW
+0x0000_0088                 DMA_LENGTH      RW
+0x0000_008C                 DMA_CTRL        RW
+0x0000_0090                 DMA_STATUS      RO
+O interconnect tem prioridade sobre a RAM para endereços de MMIO — os endereços 0x10, 0x14, 0x20, 0x24, 0x28 estão dentro da janela de RAM fisicamente, mas são interceptados antes de chegar à data_memory.
 
----
+Verificação
+Cada módulo RTL tem um testbench unitário dedicado. O testbench de topo (tb_soc_top.vhd) é self-checking e valida o firmware de demonstração end-to-end: DMA move dados na RAM, UART reporta o resultado, GPIO sinaliza progresso via LEDs.
+TestbenchCobretb_alu.vhdTodas as 11 operações da ALUtb_control_unit.vhdTodos os opcodes RV32Itb_load_store_unit.vhdLB/LH/LBU/LHU/LW/SB/SH/SW + alinhamentotb_uart.vhdTransmissão serial + CDC handshaketb_dma.vhdTransferência RAM→RAM, IRQ, casos de errotb_rv32i_core.vhdExecução de firmware completo no núcleotb_soc_top.vhdIntegração SoC completa com firmware de demo
+A simulação usa as bibliotecas UNISIM do Vivado para instanciar corretamente o MMCME2_BASE. Rodar via Vivado XSim (Flow Navigator → Run Simulation → Run Behavioral Simulation).
 
-## Key Features
+Estrutura do repositório
+mini-soc-rv32i/
+├── rtl/           # Fontes VHDL sintetizáveis
+├── tb/            # Testbenches VHDL
+├── programs/      # Firmware compilado (program.mem)
+├── constraints/   # soc_top.xdc (Artix-7 / Basys3)
+└── docs/          # Documentacao tecnica
 
-### RV32I Single-Cycle Core
-- Clean datapath/control separation
-- Modular components:
-  - ALU
-  - ALU Control
-  - Control Unit
-  - Register File
-  - Immediate Generator
-  - Branch Comparator
-  - Load/Store Unit
-  - Program Counter
-  - Trap Unit
+Alvo de síntese
+ParâmetroValorFPGAXilinx Artix-7 XC7A35TBoardDigilent Basys3Speed grade-1 (cpg236)FerramentaVivado 2025.2Clock externo100 MHz (pino W5)Clock interno28.8 MHz via MMCM
 
-### Memory-Mapped SoC Architecture
-- Dedicated instruction memory
-- Data memory integrated as a bus slave
-- Memory-mapped peripheral space
-- Structured top-level integration through `soc_top`
+Ferramentas
 
-### Custom APB-Like System Bus
-- Address-decoded interconnect
-- Byte-enable support (`wstrb`)
-- Ready/valid handshake
-- Error signaling
-- Designed for extensibility
+VHDL (VHDL-93/2002, sintetizavel)
+Vivado 2025.2 — sintese, implementacao e simulacao
+XSim — simulador integrado (UNISIM necessario para MMCM)
+RISC-V GCC Toolchain — compilacao de firmware
 
-### Multi-Clock Domain Design
-- `core_clk` domain:
-  - CPU
-  - bus/interconnect
-  - data memory
-  - GPIO
-  - timer
-  - DMA
-  - UART register interface
-- `periph_clk` domain:
-  - UART transmit engine
 
-### Clock Domain Crossing (CDC)
-- Explicit UART CDC implementation
-- Handshake-based synchronization between clock domains
-- Data stability preserved during transfers
-- Reset synchronization per domain via reset synchronizers
+Motivacao
+Projeto desenvolvido como iniciativa pessoal para aprofundar conhecimento em arquitetura de computadores, design digital RTL e co-design hardware/software. Cobre o ciclo completo: especificacao de microarquitetura, implementacao RTL, verificacao funcional por simulacao e sintese para FPGA.
 
-### Peripherals
-- **GPIO**
-- **Timer**
-  - programmable compare register
-  - single-cycle IRQ pulse generation
-- **UART**
-  - split architecture:
-    - register/bus interface in `core_clk`
-    - TX engine in `periph_clk`
-- **DMA Engine**
-  - autonomous RAM-to-RAM transfer
-  - word-based transfer model
-  - memory-mapped control registers
-  - status reporting (`busy`, `done`, `error`)
-  - completion IRQ
-
-### SoC Integration
-- Unified `soc_top`
-- CPU / DMA master multiplexing
-- Shared bus fabric with address decoding
-- Integration validated with a full SoC-level testbench
-
----
-
-## Architecture Overview
-
-The system is composed of the following main blocks:
-
-- `rv32i_core`
-- `instruction_memory`
-- `bus_interconnect`
-- `data_memory`
-- `gpio`
-- `timer`
-- `uart`
-- `dma`
-- `soc_top`
-
-### UART Partitioning
-The UART is architecturally split into:
-- **register interface** in `core_clk`
-- **transmit engine** in `periph_clk`
-
-This creates a real and explicit CDC use case within the SoC.
-
----
-
-## Verification Strategy
-
-The project follows a **verification-oriented development flow** with dedicated testbenches and assertion-based validation.
-
-### Module-Level Verification
-Dedicated testbenches exist for major blocks, including:
-- bus interconnect
-- data memory
-- GPIO
-- timer
-- UART
-- DMA
-- reset synchronizer
-- RV32I core
-
-### SoC-Level Verification
-The `tb_soc_top` testbench validates end-to-end integration using `program.mem`.
-
-The integrated demo covers:
-- program execution from instruction memory
-- GPIO state progression
-- UART transmission activity
-- DMA configuration and RAM-to-RAM copy
-- final success/failure signaling through memory-mapped I/O
-
-**Current validated outcome:** `tb_soc_top PASSED`
-
----
-
-## Design Goals
-
-- Build a realistic **SoC architecture**, not just a CPU
-- Demonstrate **multi-clock domain** design
-- Implement explicit **CDC handling**
-- Apply **clean RTL modularity**
-- Maintain strong **verification coverage**
-- Build a solid portfolio project for **FPGA / RTL / SoC** roles
-
----
-
-## Current Scope
-
-- RV32I single-cycle core
-- Memory-mapped SoC integration
-- DMA engine with simplified bus takeover
-- Two real clock domains:
-  - `core_clk`
-  - `periph_clk`
-- UART TX CDC implementation
-- Assertion-based verification
-- Full SoC integration test passing
-
----
-
-## Planned Extensions
-
-- Interrupt controller with pending/ack logic
-- Additional peripherals such as SPI
-- UART RX path
-- More advanced DMA capabilities
-- Full multi-master arbitration
-- Expanded CDC use across additional subsystems
-
----
-
-## Tools
-
-- VHDL (IEEE 1076)
-- Xilinx Vivado
-- XSim
-- Assertion-based verification
-
----
-
-## Repository Structure
-
-```text
-rtl/        RTL modules
-tb/         Testbenches
-programs/   Program images / memory initialization files
-docs/       Project documentation
+Licenca
+MIT License
