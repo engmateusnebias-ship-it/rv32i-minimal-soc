@@ -2,7 +2,9 @@
 
 **Author:** Mateus Telles Nebias
 
-A complete RISC-V RV32I single-cycle processor and mini-SoC implemented from scratch in synthesizable VHDL, targeting the Digilent Basys3 FPGA board.
+![CI](https://github.com/engmateusnebias-ship-it/risc-v-cpu/actions/workflows/ci.yml/badge.svg)
+
+A complete RISC-V RV32I single-cycle processor and mini-SoC implemented from scratch in synthesizable VHDL, verified on the Digilent Basys3 FPGA board.
 
 ---
 
@@ -17,33 +19,44 @@ The SoC includes an APB-like internal bus, instruction and data memories, GPIO, 
 ## Architecture
 
 ```
-                   +--------------------------------------------+
-       clk ------->|                                            |
-  (100 MHz, W5)    |  soc_top                                   |
-       rst ------->|                                            |
-gpio_toggle ------>|   MMCM (internal) --> periph_clk (28.8 MHz)|
-   gpio_out <------|   rv32i_core                               |
-    uart_tx <------|   instruction_memory                       |
-                   |   bus_interconnect                         |
-                   |   data_memory                              |
-                   |   gpio                                     |
-                   |   timer                                    |
-                   |   uart  (dual-clock domain)                |
-                   |   dma                                      |
-                   |   reset_synchronizer x2                    |
-                   +--------------------------------------------+
+                   +----------------------------------------------+
+       clk ------->|                                              |
+  (100 MHz, W5)    |  soc_top                                     |
+       rst ------->|   MMCM ---> core_clk   (48.0 MHz)            |
+gpio_toggle ------>|        \--> periph_clk (28.8 MHz)            |
+   gpio_out <------|   rv32i_core                                 |
+    uart_tx <------|   instruction_memory                         |
+                   |   bus_interconnect                           |
+                   |   data_memory                                |
+                   |   gpio                                       |
+                   |   timer                                      |
+                   |   uart  (dual-clock domain)                  |
+                   |   dma                                        |
+                   |   reset_synchronizer x2                      |
+                   +----------------------------------------------+
 ```
 
 ### Clock Domains
 
-| Domain       | Frequency | Source          | Modules                                      |
-|--------------|-----------|-----------------|----------------------------------------------|
-| `clk`        | 100 MHz   | W5 oscillator   | rv32i_core, data_memory, gpio, timer, dma, bus |
-| `periph_clk` | 28.8 MHz  | MMCM (internal) | UART TX engine                               |
+A single MMCM (VCO = 720 MHz) derives both working clocks from the 100 MHz
+input. The core runs at 48 MHz, **not** at 100 MHz: the single-cycle datapath
+has a ~19 ns combinational critical path (fmax ~52 MHz on this Artix-7 -1
+part), so 100 MHz cannot close timing. 48 MHz is the highest core frequency
+obtainable from the same VCO that also yields the exact 28.8 MHz peripheral
+clock, so one MMCM cleanly serves both synchronous domains.
 
-`periph_clk` is generated internally by the `MMCME2_BASE` primitive (M=36, D=5, O=25, VCO=720 MHz).
-The peripheral domain is held in reset until the MMCM `LOCKED` signal is asserted.
-The UART uses a toggle handshake with two-FF synchronizers in each direction for safe cross-domain data transfer without a FIFO.
+| Domain       | Frequency | Source            | Modules                                        |
+|--------------|-----------|-------------------|------------------------------------------------|
+| `clk`        | 100 MHz   | W5 oscillator     | MMCM input only                                |
+| `core_clk`   | 48.0 MHz  | MMCM CLKOUT0      | rv32i_core, data_memory, gpio, timer, dma, bus |
+| `periph_clk` | 28.8 MHz  | MMCM CLKOUT1      | UART TX engine                                 |
+
+Both derived clocks come from the `MMCME2_BASE` primitive
+(CLKFBOUT_MULT_F=36, DIVCLK_DIVIDE=5 -> VCO=720 MHz; CLKOUT0_DIVIDE_F=15.0
+-> 48 MHz; CLKOUT1_DIVIDE=25 -> 28.8 MHz). Both domains are held in reset
+until the MMCM `LOCKED` signal asserts. The UART crosses between `core_clk`
+and `periph_clk` using a toggle handshake with two-FF synchronizers (marked
+`ASYNC_REG`) in each direction — no FIFO.
 
 **UART bauddiv reference (periph_clk = 28.8 MHz):**
 
@@ -147,40 +160,78 @@ DMA moves data in RAM, UART reports the result, GPIO signals progress via LEDs.
 > Simulation requires the Vivado UNISIM libraries (for `MMCME2_BASE`).
 > Use Vivado XSim: Flow Navigator -> Run Simulation -> Run Behavioral Simulation.
 
+### Continuous Integration
+
+Unit testbenches run automatically on every push via GitHub Actions using the
+open-source GHDL simulator. Each self-checking bench fails the build (non-zero
+exit) if any assertion fires, so regressions are caught immediately. The
+top-level `tb_soc_top` is excluded from CI because it instantiates the Xilinx
+MMCM primitive, which GHDL does not model natively; it is verified in Vivado
+XSim instead.
+
+---
+
+## Implementation Results
+
+The design was synthesised, placed, routed, and run on hardware.
+
+| Metric              | Value                                   |
+|---------------------|-----------------------------------------|
+| Timing (WNS)        | +0.543 ns (all constraints met)         |
+| Core clock          | 48.0 MHz                                |
+| Peripheral clock    | 28.8 MHz                                |
+| LUTs                | ~2000                                   |
+| Flip-flops          | ~500                                    |
+| BRAM                | 0                                       |
+| On-chip power       | ~0.18 W                                 |
+| Status              | Verified on Basys3 hardware             |
+
+The demo firmware: on a button press (BTNL), the CPU programs the DMA to copy
+a data block in RAM, the UART reports completion, and the GPIO drives the LEDs
+through a progress sequence ending at 0xA on success — confirmed on the board.
+
 ---
 
 ## Repository Structure
 
 ```
 mini-soc-rv32i/
-├── rtl/           # Synthesizable VHDL sources
-├── tb/            # VHDL testbenches
-├── programs/      # Compiled firmware (program.mem)
-├── constraints/   # soc_top.xdc (Basys3 / Artix-7)
-└── docs/          # Technical documentation
+├── rtl/             # Synthesizable VHDL sources
+├── tb/              # VHDL testbenches
+├── programs/        # Firmware image (program.mem)
+├── constraints/     # soc_top.xdc (Basys3 / Artix-7)
+├── docs/            # Technical documentation
+├── .github/         # CI workflow (GHDL)
+└── Makefile         # GHDL build/test runner
 ```
 
 ---
 
 ## Synthesis Target
 
-| Parameter      | Value                  |
-|----------------|------------------------|
-| FPGA           | Xilinx Artix-7 XC7A35T |
-| Board          | Digilent Basys3        |
-| Speed grade    | -1 (cpg236)            |
-| Tool           | Vivado 2025.2          |
-| External clock | 100 MHz (pin W5)       |
-| Internal clock | 28.8 MHz via MMCM      |
+| Parameter      | Value                            |
+|----------------|----------------------------------|
+| FPGA           | Xilinx Artix-7 XC7A35T           |
+| Board          | Digilent Basys3                  |
+| Speed grade    | -1 (cpg236)                      |
+| Tool           | Vivado 2025.2                    |
+| External clock | 100 MHz (pin W5)                 |
+| Core clock     | 48.0 MHz (MMCM CLKOUT0)          |
+| Peripheral clk | 28.8 MHz (MMCM CLKOUT1)          |
+
+The program image path is passed to synthesis via the `INIT_FILE` top-level
+generic (default `program.mem` for GHDL/CI; absolute path set in Vivado
+Settings -> General -> Generics/Parameters).
 
 ---
 
 ## Tools
 
-- **VHDL** (VHDL-93/2002, synthesizable)
+- **VHDL** (VHDL-2008, synthesizable)
 - **Vivado 2025.2** - synthesis, implementation, simulation
-- **XSim** - integrated simulator (UNISIM required for MMCM primitive)
-- **RISC-V GCC Toolchain** - firmware compilation
+- **XSim** - Vivado simulator (UNISIM required for MMCM primitive)
+- **GHDL** - open-source simulator used in CI
+- **RISC-V GCC Toolchain** - firmware compilation (planned migration from hand-assembled)
 
 ---
 
