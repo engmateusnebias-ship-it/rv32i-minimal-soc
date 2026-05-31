@@ -1,0 +1,94 @@
+================================================================================
+ Mini-SoC RV32I -- Memory Map (data bus)
+================================================================================
+
+Design rule
+-----------
+The data RAM and the memory-mapped peripherals occupy fully separated,
+non-overlapping address regions. No peripheral lives inside the RAM window,
+so the full 1 KiB of RAM is usable by software with no shadowed holes.
+
+All peripheral addresses are kept below 0x800 so that each one fits in a
+single RV32I 12-bit signed immediate (ADDI / load-store offset). This keeps
+the current hand-assembled firmware to one instruction per address load.
+When the firmware moves to a GCC + linker-script flow, the peripheral region
+can be relocated to a high base (e.g. 0x4000_0000) without this constraint.
+
+Note: the trap/exception vector (0x0000_0080) lives in INSTRUCTION space,
+which is separate from this data-bus map (Harvard-style fetch path). It is
+unrelated to the DMA register block and is not affected by this map.
+
+
+Region overview
+---------------
+  0x0000_0000 - 0x0000_03FF   Data RAM        (1 KiB, 256 words, RW)
+  0x0000_0400 - 0x0000_040F   GPIO
+  0x0000_0410 - 0x0000_041F   Timer
+  0x0000_0420 - 0x0000_042F   UART
+  0x0000_0430 - 0x0000_045F   DMA
+  0x0000_0460 - 0x0000_046F   SPI   (reserved, not yet implemented)
+  0x0000_0470 - 0x0000_047F   IRQ   (reserved, not yet implemented)
+  0x0000_0480 - 0x0000_07FF   reserved for future expansion
+
+
+Register map
+------------
+  Address        Name           Access  Description
+  -----------    ------------   ------  -------------------------------------
+  0x0000_0000    Data RAM       RW      256 words; addr(9:2) indexes the word
+
+  0x0000_0400    GPIO_OUT       RW      bits[3:0] drive gpio_out
+  0x0000_0404    GPIO_IN        RO      bit0 reflects gpio_toggle
+  0x0000_0408    (reserved)             local error within GPIO window
+  0x0000_040C    (reserved)             local error within GPIO window
+
+  0x0000_0410    TIMER_COUNT    RO      current counter value
+  0x0000_0414    TIMER_CMP      RW      compare value
+  0x0000_0418    TIMER_CTRL     RW      bit0=enable, bit1=irq_enable, bit2=clear
+  0x0000_041C    (reserved)             local error within Timer window
+
+  0x0000_0420    UART_TXDATA    WO      byte to transmit
+  0x0000_0424    UART_STATUS    RO      bit0=tx_ready, bit1=tx_busy
+  0x0000_0428    UART_CTRL      RW      bit0=enable
+  0x0000_042C    UART_BAUDDIV   RW      baud rate divisor
+
+  0x0000_0430    DMA_SRC_ADDR   RW      transfer source address
+  0x0000_0434    DMA_DST_ADDR   RW      transfer destination address
+  0x0000_0438    DMA_LENGTH     RW      transfer length in words
+  0x0000_043C    DMA_CTRL       RW      bit0=start, bit1=irq_enable
+  0x0000_0440    DMA_STATUS     RO      bit0=busy, bit1=done, bit2=error
+
+  (reserved blocks below are decoded but not yet implemented)
+  0x0000_0460    SPI_TXDATA     WO
+  0x0000_0464    SPI_RXDATA     RO
+  0x0000_0468    SPI_STATUS     RO
+  0x0000_046C    SPI_CTRL       RW
+  0x0000_0470    IRQ_PENDING    RO
+  0x0000_0474    IRQ_MASK       RW
+  0x0000_0478    IRQ_ACK        WO
+  0x0000_047C    IRQ_STATUS     RO
+
+
+Decode behaviour
+----------------
+The bus_interconnect routes by address range:
+
+  RAM    : addr <= 0x3FF
+  GPIO   : 0x400 .. 0x40F
+  Timer  : 0x410 .. 0x41F
+  UART   : 0x420 .. 0x42F
+  DMA    : 0x430 .. 0x45F
+  other  : decoded as invalid -> ready='1', error='1'
+
+Within a peripheral window, an address that does not map to a real register
+(e.g. 0x408 in the GPIO window) is reported as a local error by that
+peripheral and reads back zero.
+
+
+Migration note (previous map)
+-----------------------------
+Earlier revisions placed peripherals inside the RAM window
+(GPIO 0x10, Timer 0x20, UART 0x40, DMA 0x80). Because the interconnect
+intercepted those addresses before the RAM, the corresponding RAM cells were
+unreachable -- physically present, architecturally shadowed. This map removes
+that overlap entirely: RAM is one contiguous region, peripherals are another.
