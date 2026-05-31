@@ -34,26 +34,6 @@ gpio_toggle ------>|   MMCM (internal) --> periph_clk (28.8 MHz)|
                    +--------------------------------------------+
 ```
 
-## RV32I Core
-
-Single-cycle implementation of the base RV32I ISA. The datapath is entirely combinational between the Program Counter and the Register File. The five phases (Fetch, Decode, Execute, Memory, Writeback) are conceptual divisions of a single combinational path, not pipeline stages.
-
-| Module                    | Function                                                                    |
-|---------------------------|-----------------------------------------------------------------------------|
-| `program_counter.vhd`     | PC with synchronous reset                                                   |
-| `instruction_memory.vhd`  | ROM initialized from `program.mem` at elaboration                           |
-| `control_unit.vhd`        | Full RV32I decoder: R/I/S/B/U/J, FENCE, ECALL, EBREAK                      |
-| `alu_control.vhd`         | Translates opcode/funct3/funct7 to 4-bit ALU operation                      |
-| `alu.vhd`                 | 11 operations: ADD, SUB, LUI, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND      |
-| `register_file.vhd`       | 32 registers, x0 hardwired zero, combinational read                         |
-| `immediate_generator.vhd` | Sign-extension for all immediate formats                                    |
-| `branch_compare.vhd`      | BEQ / BNE / BLT / BGE / BLTU / BGEU                                        |
-| `load_store_unit.vhd`     | Byte enables, alignment, sign/zero-extend (LB/LH/LBU/LHU/LW)              |
-| `trap_unit.vhd`           | Prioritized exceptions: misaligned fetch > misaligned LS > illegal > ECALL |
-
----
-
-
 ### Clock Domains
 
 | Domain       | Frequency | Source          | Modules                                      |
@@ -75,18 +55,40 @@ The UART uses a toggle handshake with two-FF synchronizers in each direction for
 
 ---
 
+## RV32I Core
+
+Single-cycle implementation of the base RV32I ISA. The datapath is entirely combinational between the Program Counter and the Register File. The five phases (Fetch, Decode, Execute, Memory, Writeback) are conceptual divisions of a single combinational path, not pipeline stages.
+
+| Module                    | Function                                                                    |
+|---------------------------|-----------------------------------------------------------------------------|
+| `program_counter.vhd`     | PC with synchronous reset                                                   |
+| `instruction_memory.vhd`  | ROM initialized from `program.mem` at elaboration                           |
+| `control_unit.vhd`        | Full RV32I decoder: R/I/S/B/U/J, FENCE, ECALL, EBREAK                      |
+| `alu_control.vhd`         | Translates opcode/funct3/funct7 to 4-bit ALU operation                      |
+| `alu.vhd`                 | 11 operations: ADD, SUB, LUI, SLL, SLT, SLTU, XOR, SRL, SRA, OR, AND      |
+| `register_file.vhd`       | 32 registers, x0 hardwired zero, combinational read                         |
+| `immediate_generator.vhd` | Sign-extension for all immediate formats                                    |
+| `branch_compare.vhd`      | BEQ / BNE / BLT / BGE / BLTU / BGEU                                        |
+| `load_store_unit.vhd`     | Byte enables, alignment, sign/zero-extend (LB/LH/LBU/LHU/LW)              |
+| `trap_unit.vhd`           | Prioritized exceptions: misaligned fetch > misaligned LS > illegal > ECALL |
+
+---
+
 ## Peripherals and Bus
 
 The internal bus is APB-like: `addr`, `wdata`, `wstrb`, `write`, `read`, `valid`, `rdata`, `ready`, `error`.
 The `bus_interconnect` routes by address and aggregates responses.
 
+RAM and peripherals occupy fully separated, non-overlapping regions: RAM is
+0x000-0x3FF (all 256 words usable), peripherals start at 0x400.
+
 | Module            | Base  | Registers                                                             |
 |-------------------|-------|-----------------------------------------------------------------------|
 | `data_memory.vhd` | 0x000 | 256-word RAM (1 KiB), byte strobes                                    |
-| `gpio.vhd`        | 0x010 | GPIO_OUT (RW), GPIO_IN (RO)                                           |
-| `timer.vhd`       | 0x020 | TIMER_COUNT (RO), TIMER_CMP (RW), TIMER_CTRL (RW)                    |
-| `uart.vhd`        | 0x040 | UART_TXDATA (WO), UART_STATUS (RO), UART_CTRL (RW), UART_BAUDDIV (RW)|
-| `dma.vhd`         | 0x080 | DMA_SRC_ADDR, DMA_DST_ADDR, DMA_LENGTH, DMA_CTRL, DMA_STATUS         |
+| `gpio.vhd`        | 0x400 | GPIO_OUT (RW), GPIO_IN (RO)                                           |
+| `timer.vhd`       | 0x410 | TIMER_COUNT (RO), TIMER_CMP (RW), TIMER_CTRL (RW)                    |
+| `uart.vhd`        | 0x420 | UART_TXDATA (WO), UART_STATUS (RO), UART_CTRL (RW), UART_BAUDDIV (RW)|
+| `dma.vhd`         | 0x430 | DMA_SRC_ADDR, DMA_DST_ADDR, DMA_LENGTH, DMA_CTRL, DMA_STATUS         |
 
 **DMA:** Single-channel, word-based (32-bit) controller. Four-state FSM: IDLE -> READ_REQ -> WRITE_REQ -> DONE.
 During a transfer the DMA asserts `active_o` and takes ownership of the bus; the CPU is stalled.
@@ -103,25 +105,25 @@ The data byte remains stable in a staging register until the toggle handshake co
 ```
 Address       Name          Access   Notes
 -----------   -----------   ------   ----------------------------------
-0x0000_0000   Data RAM      RW       1 KiB, 256 words
-0x0000_0010   GPIO_OUT      RW       bits [3:0] drive gpio_out
-0x0000_0014   GPIO_IN       RO       bit [0] reflects gpio_toggle
-0x0000_0020   TIMER_COUNT   RO       current counter value
-0x0000_0024   TIMER_CMP     RW       compare value
-0x0000_0028   TIMER_CTRL    RW       [0]=enable [1]=irq_en [2]=clear
-0x0000_0040   UART_TXDATA   WO       byte to transmit
-0x0000_0044   UART_STATUS   RO       [0]=tx_ready [1]=tx_busy
-0x0000_0048   UART_CTRL     RW       [0]=enable
-0x0000_004C   UART_BAUDDIV  RW       baud rate divisor
-0x0000_0080   DMA_SRC_ADDR  RW       transfer source address
-0x0000_0084   DMA_DST_ADDR  RW       transfer destination address
-0x0000_0088   DMA_LENGTH    RW       transfer length in words
-0x0000_008C   DMA_CTRL      RW       [0]=start [1]=irq_enable
-0x0000_0090   DMA_STATUS    RO       [0]=busy [1]=done [2]=error
+0x0000_0000   Data RAM      RW       1 KiB, 256 words (fully usable)
+0x0000_0400   GPIO_OUT      RW       bits [3:0] drive gpio_out
+0x0000_0404   GPIO_IN       RO       bit [0] reflects gpio_toggle
+0x0000_0410   TIMER_COUNT   RO       current counter value
+0x0000_0414   TIMER_CMP     RW       compare value
+0x0000_0418   TIMER_CTRL    RW       [0]=enable [1]=irq_en [2]=clear
+0x0000_0420   UART_TXDATA   WO       byte to transmit
+0x0000_0424   UART_STATUS   RO       [0]=tx_ready [1]=tx_busy
+0x0000_0428   UART_CTRL     RW       [0]=enable
+0x0000_042C   UART_BAUDDIV  RW       baud rate divisor
+0x0000_0430   DMA_SRC_ADDR  RW       transfer source address
+0x0000_0434   DMA_DST_ADDR  RW       transfer destination address
+0x0000_0438   DMA_LENGTH    RW       transfer length in words
+0x0000_043C   DMA_CTRL      RW       [0]=start [1]=irq_enable
+0x0000_0440   DMA_STATUS    RO       [0]=busy [1]=done [2]=error
 ```
 
-> MMIO addresses 0x010-0x028 fall within the RAM address window but are
-> intercepted by the bus interconnect decoder before reaching data_memory.
+> RAM (0x000-0x3FF) and peripherals (0x400+) occupy non-overlapping
+> regions, so all 256 RAM words are usable with no shadowed addresses.
 
 ---
 
