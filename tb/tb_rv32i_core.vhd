@@ -225,9 +225,11 @@ begin
   bus_read  <= dma_m_read  when dma_active = '1' else cpu_bus_read;
   bus_valid <= dma_m_valid when dma_active = '1' else cpu_bus_valid;
 
-  cpu_bus_rdata <= bus_rdata;
-  cpu_bus_ready <= bus_ready;
-  cpu_bus_error <= bus_error;
+  -- CPU must be stalled while DMA owns the bus: mask its response signals
+  -- with dma_active so it does not observe the DMA's fabric transactions.
+  cpu_bus_rdata <= bus_rdata when dma_active = '0' else (others => '0');
+  cpu_bus_ready <= bus_ready when dma_active = '0' else '0';
+  cpu_bus_error <= bus_error when dma_active = '0' else '0';
 
   dma_m_rdata <= bus_rdata;
   dma_m_ready <= bus_ready;

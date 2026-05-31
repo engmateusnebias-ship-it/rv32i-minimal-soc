@@ -72,11 +72,11 @@ architecture rtl of dma is
     signal master_valid     : std_logic;
     signal status_busy      : std_logic;
 
-    constant DMA_SRC_ADDR_C    : std_logic_vector(31 downto 0) := x"00000080";
-    constant DMA_DST_ADDR_C    : std_logic_vector(31 downto 0) := x"00000084";
-    constant DMA_LENGTH_ADDR_C : std_logic_vector(31 downto 0) := x"00000088";
-    constant DMA_CTRL_ADDR_C   : std_logic_vector(31 downto 0) := x"0000008C";
-    constant DMA_STATUS_ADDR_C : std_logic_vector(31 downto 0) := x"00000090";
+    constant DMA_SRC_ADDR_C    : std_logic_vector(31 downto 0) := x"00000430";
+    constant DMA_DST_ADDR_C    : std_logic_vector(31 downto 0) := x"00000434";
+    constant DMA_LENGTH_ADDR_C : std_logic_vector(31 downto 0) := x"00000438";
+    constant DMA_CTRL_ADDR_C   : std_logic_vector(31 downto 0) := x"0000043C";
+    constant DMA_STATUS_ADDR_C : std_logic_vector(31 downto 0) := x"00000440";
 begin
     bus_hit     <= sel and valid;
     addr_hit    <= '1' when (addr = DMA_SRC_ADDR_C or addr = DMA_DST_ADDR_C or addr = DMA_LENGTH_ADDR_C or

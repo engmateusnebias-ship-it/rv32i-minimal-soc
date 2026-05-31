@@ -130,22 +130,22 @@ begin
         check(ram_sel = '1', "RAM read decode failed");
         check(m_rdata = x"AAAAAAAA" and m_ready = '1' and m_error = '0', "RAM read response mux failed");
 
-        m_addr <= x"00000014";
+        m_addr <= x"00000404";
         wait for 1 ns;
         check(gpio_sel = '1' and ram_sel = '0', "GPIO read decode failed");
         check(m_rdata = x"BBBBBBBB", "GPIO read response mux failed");
 
-        m_addr <= x"00000020";
+        m_addr <= x"00000410";
         wait for 1 ns;
         check(timer_sel = '1', "TIMER read decode failed");
         check(m_rdata = x"CCCCCCCC", "TIMER read response mux failed");
 
-        m_addr <= x"00000044";
+        m_addr <= x"00000424";
         wait for 1 ns;
         check(uart_sel = '1', "UART read decode failed");
         check(m_rdata = x"DDDDDDDD", "UART read response mux failed");
 
-        m_addr <= x"00000090";
+        m_addr <= x"00000440";
         wait for 1 ns;
         check(dma_sel = '1', "DMA read decode failed");
         check(m_rdata = x"EEEEEEEE", "DMA read response mux failed");

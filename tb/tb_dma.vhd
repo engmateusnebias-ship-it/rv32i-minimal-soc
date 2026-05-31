@@ -304,7 +304,7 @@ begin
         cpu_write <= '0'; cpu_wstrb <= (others => '0'); cpu_valid <= '0';
 
         -- Program DMA registers.
-        cpu_addr  <= x"00000080"; cpu_wdata <= x"00000100"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"00000430"; cpu_wdata <= x"00000100"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -313,7 +313,7 @@ begin
         check(cpu_error = '0', "CPU write returned error");
         cpu_write <= '0'; cpu_wstrb <= (others => '0'); cpu_valid <= '0';
 
-        cpu_addr  <= x"00000084"; cpu_wdata <= x"00000140"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"00000434"; cpu_wdata <= x"00000140"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -322,7 +322,7 @@ begin
         check(cpu_error = '0', "CPU write returned error");
         cpu_write <= '0'; cpu_wstrb <= (others => '0'); cpu_valid <= '0';
 
-        cpu_addr  <= x"00000088"; cpu_wdata <= x"00000002"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"00000438"; cpu_wdata <= x"00000002"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -331,7 +331,7 @@ begin
         check(cpu_error = '0', "CPU write returned error");
         cpu_write <= '0'; cpu_wstrb <= (others => '0'); cpu_valid <= '0';
 
-        cpu_addr  <= x"0000008C"; cpu_wdata <= x"00000002"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"0000043C"; cpu_wdata <= x"00000002"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -341,7 +341,7 @@ begin
         cpu_write <= '0'; cpu_wstrb <= (others => '0'); cpu_valid <= '0';
 
         -- Start DMA.
-        cpu_addr  <= x"0000008C"; cpu_wdata <= x"00000003"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"0000043C"; cpu_wdata <= x"00000003"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -357,7 +357,7 @@ begin
         tick(1);
 
         -- Status after completion.
-        cpu_addr  <= x"00000090"; cpu_write <= '0'; cpu_read <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"00000440"; cpu_write <= '0'; cpu_read <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -396,7 +396,7 @@ begin
         check(tmp = x"55667788", "DMA second destination word mismatch");
 
         -- Invalid configuration: length=0 must set error and not start.
-        cpu_addr  <= x"00000088"; cpu_wdata <= x"00000000"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"00000438"; cpu_wdata <= x"00000000"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -405,7 +405,7 @@ begin
         check(cpu_error = '0', "CPU write returned error");
         cpu_write <= '0'; cpu_wstrb <= (others => '0'); cpu_valid <= '0';
 
-        cpu_addr  <= x"0000008C"; cpu_wdata <= x"00000003"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"0000043C"; cpu_wdata <= x"00000003"; cpu_wstrb <= "1111"; cpu_write <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';
@@ -414,7 +414,7 @@ begin
         check(cpu_error = '0', "CPU write returned error");
         cpu_write <= '0'; cpu_wstrb <= (others => '0'); cpu_valid <= '0';
 
-        cpu_addr  <= x"00000090"; cpu_write <= '0'; cpu_read <= '1'; cpu_valid <= '1';
+        cpu_addr  <= x"00000440"; cpu_write <= '0'; cpu_read <= '1'; cpu_valid <= '1';
         loop
             tick(1);
             exit when cpu_ready = '1';

@@ -97,7 +97,7 @@ begin
         wait for 1 ns;
 
         -- After reset: disabled, idle line high, ready=1, busy=0
-        addr    <= x"00000044";
+        addr    <= x"00000424";
         read_en <= '1';
         wait for 1 ns;
         check(uart_tx = '1', "UART TX line should idle high after reset");
@@ -106,7 +106,7 @@ begin
         read_en <= '0';
 
         -- Writing TXDATA while disabled must error
-        addr     <= x"00000040";
+        addr     <= x"00000420";
         wdata    <= x"00000055";
         wstrb    <= "0001";
         write_en <= '1';
@@ -117,7 +117,7 @@ begin
         wstrb    <= (others => '0');
 
         -- Enable UART
-        addr     <= x"00000048";
+        addr     <= x"00000428";
         wdata    <= x"00000001";
         wstrb    <= "0001";
         write_en <= '1';
@@ -128,7 +128,7 @@ begin
         wstrb    <= (others => '0');
 
         -- Program bauddiv = 1 (two periph clocks per bit)
-        addr     <= x"0000004C";
+        addr     <= x"0000042C";
         wdata    <= x"00000001";
         wstrb    <= "1111";
         write_en <= '1';
@@ -139,7 +139,7 @@ begin
         wstrb    <= (others => '0');
 
         -- STATUS should show ready before TX
-        addr    <= x"00000044";
+        addr    <= x"00000424";
         read_en <= '1';
         wait for 1 ns;
         check(rdata(0) = '1' and rdata(1) = '0', "UART should be ready before TX");
@@ -147,7 +147,7 @@ begin
 
         -- Start TX of 0xA5.
         -- Important: sample acceptance during the access cycle, then deassert write.
-        addr     <= x"00000040";
+        addr     <= x"00000420";
         wdata    <= x"000000A5";
         wstrb    <= "0001";
         write_en <= '1';
@@ -165,7 +165,7 @@ begin
         write_en <= '0';
 
         -- STATUS should indicate busy from core side
-        addr    <= x"00000044";
+        addr    <= x"00000424";
         read_en <= '1';
         wait for 1 ns;
         check(rdata(1) = '1', "UART should report busy after TX start");
@@ -192,13 +192,13 @@ begin
         tick_periph(2); wait for 1 ns; check(uart_tx = '1', "UART stop bit incorrect");
 
         tick_core(8);
-        addr    <= x"00000044";
+        addr    <= x"00000424";
         read_en <= '1';
         wait for 1 ns;
         check(rdata(0) = '1' and rdata(1) = '0', "UART should return to ready after TX");
         read_en <= '0';
 
-        addr    <= x"00000050";
+        addr    <= x"00000430";
         read_en <= '1';
         wait for 1 ns;
         check(ready = '1' and error = '1', "UART invalid local address flags incorrect");

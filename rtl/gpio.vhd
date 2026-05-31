@@ -3,8 +3,8 @@ use IEEE.STD_LOGIC_1164.ALL;
 
 -- Memory-mapped GPIO peripheral.
 -- Address map:
---  - 0x0000_0010 GPIO_OUT (RW) : bits[3:0] drive gpio_out
---  - 0x0000_0014 GPIO_IN  (RO) : bit0 reflects gpio_toggle
+--  - 0x0000_0400 GPIO_OUT (RW) : bits[3:0] drive gpio_out
+--  - 0x0000_0404 GPIO_IN  (RO) : bit0 reflects gpio_toggle
 entity gpio is
     Port (
         clk         : in  std_logic;
@@ -33,14 +33,14 @@ architecture rtl of gpio is
     signal addr_hit : std_logic;
 begin
     bus_hit  <= sel and valid;
-    addr_hit <= '1' when (addr = x"00000010" or addr = x"00000014") else '0';
+    addr_hit <= '1' when (addr = x"00000400" or addr = x"00000404") else '0';
 
     process(clk, rst)
     begin
         if rst = '1' then
             out_reg <= (others => '0');
         elsif rising_edge(clk) then
-            if bus_hit = '1' and write_en = '1' and addr = x"00000010" then
+            if bus_hit = '1' and write_en = '1' and addr = x"00000400" then
                 if wstrb(0) = '1' then
                     out_reg <= wdata(3 downto 0);
                 end if;
@@ -52,9 +52,9 @@ begin
     begin
         rdata <= (others => '0');
         if bus_hit = '1' and read_en = '1' then
-            if addr = x"00000010" then
+            if addr = x"00000400" then
                 rdata <= (31 downto 4 => '0') & out_reg;
-            elsif addr = x"00000014" then
+            elsif addr = x"00000404" then
                 rdata <= (31 downto 1 => '0') & gpio_toggle;
             end if;
         end if;

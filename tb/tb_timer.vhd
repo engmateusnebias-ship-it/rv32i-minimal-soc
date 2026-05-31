@@ -67,7 +67,7 @@ begin
         tick(1);
 
         -- After reset, COUNT must be zero.
-        addr    <= x"00000020";
+        addr    <= x"00000410";
         read_en <= '1';
         wait for 1 ns;
         check(rdata = x"00000000", "COUNT should reset to zero");
@@ -75,7 +75,7 @@ begin
         read_en <= '0';
 
         -- Program CMP = 3.
-        addr     <= x"00000024";
+        addr     <= x"00000414";
         wdata    <= x"00000003";
         wstrb    <= "1111";
         write_en <= '1';
@@ -90,7 +90,7 @@ begin
         read_en <= '0';
 
         -- Program CTRL = enable + irq_enable.
-        addr     <= x"00000028";
+        addr     <= x"00000418";
         wdata    <= x"00000003";
         wstrb    <= "0001";
         write_en <= '1';
@@ -116,14 +116,14 @@ begin
         check(irq = '0', "IRQ must be a one-cycle pulse");
 
         -- Timer must keep counting after compare.
-        addr    <= x"00000020";
+        addr    <= x"00000410";
         read_en <= '1';
         wait for 1 ns;
         check(unsigned(rdata) >= 4, "COUNT should continue after compare");
         read_en <= '0';
 
         -- Clear the counter with CTRL.clear pulse only.
-        addr     <= x"00000028";
+        addr     <= x"00000418";
         wdata    <= x"00000004";
         wstrb    <= "0001";
         write_en <= '1';
@@ -131,21 +131,21 @@ begin
         write_en <= '0';
         wstrb    <= (others => '0');
 
-        addr    <= x"00000020";
+        addr    <= x"00000410";
         read_en <= '1';
         wait for 1 ns;
         check(rdata = x"00000000", "COUNT should clear to zero");
         read_en <= '0';
 
         -- Read CTRL after clear pulse: clear bit must still read as 0.
-        addr    <= x"00000028";
+        addr    <= x"00000418";
         read_en <= '1';
         wait for 1 ns;
         check(rdata(2) = '0', "CTRL.clear must read as zero");
         read_en <= '0';
 
         -- Invalid local address must respond with ready=1, error=1, rdata=0.
-        addr    <= x"0000002C";
+        addr    <= x"0000041C";
         read_en <= '1';
         wait for 1 ns;
         check(ready = '1' and error = '1', "Timer invalid local address flags incorrect");

@@ -13,10 +13,10 @@ use IEEE.NUMERIC_STD.ALL;
 --     until the request is accepted in the peripheral domain
 --
 -- Memory map:
---   0x0000_0040 UART_TXDATA  (WO)
---   0x0000_0044 UART_STATUS  (RO) bit0=tx_ready, bit1=tx_busy
---   0x0000_0048 UART_CTRL    (RW) bit0=enable
---   0x0000_004C UART_BAUDDIV (RW)
+--   0x0000_0420 UART_TXDATA  (WO)
+--   0x0000_0424 UART_STATUS  (RO) bit0=tx_ready, bit1=tx_busy
+--   0x0000_0428 UART_CTRL    (RW) bit0=enable
+--   0x0000_042C UART_BAUDDIV (RW)
 entity uart is
     Port (
         core_clk    : in  std_logic;
@@ -41,10 +41,10 @@ entity uart is
 end uart;
 
 architecture rtl of uart is
-    constant UART_TXDATA_ADDR_C  : std_logic_vector(31 downto 0) := x"00000040";
-    constant UART_STATUS_ADDR_C  : std_logic_vector(31 downto 0) := x"00000044";
-    constant UART_CTRL_ADDR_C    : std_logic_vector(31 downto 0) := x"00000048";
-    constant UART_BAUDDIV_ADDR_C : std_logic_vector(31 downto 0) := x"0000004C";
+    constant UART_TXDATA_ADDR_C  : std_logic_vector(31 downto 0) := x"00000420";
+    constant UART_STATUS_ADDR_C  : std_logic_vector(31 downto 0) := x"00000424";
+    constant UART_CTRL_ADDR_C    : std_logic_vector(31 downto 0) := x"00000428";
+    constant UART_BAUDDIV_ADDR_C : std_logic_vector(31 downto 0) := x"0000042C";
 
     signal bus_hit          : std_logic;
     signal access_req       : std_logic;

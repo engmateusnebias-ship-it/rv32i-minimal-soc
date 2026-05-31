@@ -82,26 +82,26 @@ architecture rtl of bus_interconnect is
 begin
     dec_gpio <= '1' when (
         m_valid = '1' and
-        unsigned(m_addr) >= to_unsigned(16#10#, 32) and
-        unsigned(m_addr) <= to_unsigned(16#1F#, 32)
+        unsigned(m_addr) >= to_unsigned(16#400#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#40F#, 32)
     ) else '0';
 
     dec_timer <= '1' when (
         m_valid = '1' and
-        unsigned(m_addr) >= to_unsigned(16#20#, 32) and
-        unsigned(m_addr) <= to_unsigned(16#2F#, 32)
+        unsigned(m_addr) >= to_unsigned(16#410#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#41F#, 32)
     ) else '0';
 
     dec_uart <= '1' when (
         m_valid = '1' and
-        unsigned(m_addr) >= to_unsigned(16#40#, 32) and
-        unsigned(m_addr) <= to_unsigned(16#4F#, 32)
+        unsigned(m_addr) >= to_unsigned(16#420#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#42F#, 32)
     ) else '0';
 
     dec_dma <= '1' when (
         m_valid = '1' and
-        unsigned(m_addr) >= to_unsigned(16#80#, 32) and
-        unsigned(m_addr) <= to_unsigned(16#9F#, 32)
+        unsigned(m_addr) >= to_unsigned(16#430#, 32) and
+        unsigned(m_addr) <= to_unsigned(16#45F#, 32)
     ) else '0';
 
     ram_region <= '1' when unsigned(m_addr) <= to_unsigned(16#3FF#, 32) else '0';

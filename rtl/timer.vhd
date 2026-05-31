@@ -4,9 +4,9 @@ use IEEE.NUMERIC_STD.ALL;
 
 -- Simple memory-mapped timer.
 -- Registers (byte addresses):
---  - 0x0000_0020 TIMER_COUNT (RO): increments every clock when enabled
---  - 0x0000_0024 TIMER_CMP   (RW): compare value
---  - 0x0000_0028 TIMER_CTRL  (RW): bit0=enable, bit1=irq_enable, bit2=clear (write pulse)
+--  - 0x0000_0410 TIMER_COUNT (RO): increments every clock when enabled
+--  - 0x0000_0414 TIMER_CMP   (RW): compare value
+--  - 0x0000_0418 TIMER_CTRL  (RW): bit0=enable, bit1=irq_enable, bit2=clear (write pulse)
 --
 -- Official semantics:
 --  - TIMER_COUNT increments only when enable=1
@@ -45,7 +45,7 @@ architecture rtl of timer is
     signal addr_hit  : std_logic;
 begin
     bus_hit  <= sel and valid;
-    addr_hit <= '1' when (addr = x"00000020" or addr = x"00000024" or addr = x"00000028") else '0';
+    addr_hit <= '1' when (addr = x"00000410" or addr = x"00000414" or addr = x"00000418") else '0';
 
     process(clk, rst)
         variable next_count  : unsigned(31 downto 0);
@@ -71,7 +71,7 @@ begin
 
             -- TIMER_CTRL write.
             -- clear has write-pulse semantics and is not stored.
-            if bus_hit = '1' and write_en = '1' and addr = x"00000028" and wstrb(0) = '1' then
+            if bus_hit = '1' and write_en = '1' and addr = x"00000418" and wstrb(0) = '1' then
                 next_enable := wdata(0);
                 next_irq_en := wdata(1);
 
@@ -81,7 +81,7 @@ begin
             end if;
 
             -- TIMER_CMP write.
-            if bus_hit = '1' and write_en = '1' and addr = x"00000024" and wstrb = "1111" then
+            if bus_hit = '1' and write_en = '1' and addr = x"00000414" and wstrb = "1111" then
                 next_cmp := unsigned(wdata);
             end if;
 
@@ -113,11 +113,11 @@ begin
         -- ctrl(2) always reads back as 0 because clear is write-pulse only.
 
         if bus_hit = '1' and read_en = '1' then
-            if addr = x"00000020" then
+            if addr = x"00000410" then
                 rdata <= std_logic_vector(count_reg);
-            elsif addr = x"00000024" then
+            elsif addr = x"00000414" then
                 rdata <= std_logic_vector(cmp_reg);
-            elsif addr = x"00000028" then
+            elsif addr = x"00000418" then
                 rdata <= ctrl;
             end if;
         end if;

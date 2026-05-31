@@ -67,7 +67,7 @@ begin
 
         check(gpio_out = "0000", "GPIO reset value incorrect");
 
-        addr     <= x"00000010";
+        addr     <= x"00000400";
         wdata    <= x"0000000A";
         wstrb    <= "0001";
         write_en <= '1';
@@ -84,7 +84,7 @@ begin
         read_en <= '0';
 
         gpio_toggle <= '1';
-        addr    <= x"00000014";
+        addr    <= x"00000404";
         read_en <= '1';
         wait for 1 ns;
         check(rdata(0) = '1', "GPIO IN read failed (toggle=1)");
@@ -96,7 +96,7 @@ begin
         check(rdata(0) = '0', "GPIO IN read failed (toggle=0)");
         read_en <= '0';
 
-        addr    <= x"00000018";
+        addr    <= x"00000408";
         read_en <= '1';
         wait for 1 ns;
         check(rdata = x"00000000", "GPIO invalid local address should return zero");
