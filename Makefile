@@ -37,7 +37,7 @@ RTL_SRCS := \
 	rtl/bus_interconnect.vhd \
 	rtl/uart.vhd \
 	rtl/dma.vhd \
-	rtl/rv32i_core.vhd
+	rtl/rv32i_core.vhd \
 
 TB_SRCS := \
 	tb/tb_alu.vhd \
@@ -57,7 +57,10 @@ TB_SRCS := \
 	tb/tb_bus_interconnect.vhd \
 	tb/tb_uart.vhd \
 	tb/tb_dma.vhd \
-	tb/tb_rv32i_core.vhd
+	tb/tb_rv32i_core.vhd \
+	tb/tb_pc_instr_control.vhd \
+	tb/tb_pc_instr_ctrl_reg.vhd \
+	tb/tb_pc_instr_mem.vhd
 
 TB_TOPS := \
 	tb_alu \
@@ -77,7 +80,10 @@ TB_TOPS := \
 	tb_bus_interconnect \
 	tb_uart \
 	tb_dma \
-	tb_rv32i_core
+	tb_rv32i_core \
+	tb_pc_instr_control \
+	tb_pc_instr_ctrl_reg \
+	tb_pc_instr_mem
 
 .PHONY: all ci sim clean
 
@@ -85,7 +91,15 @@ all: ci
 
 # ----------------------------------------------------------------------
 # ci: analyse all sources then run every testbench
+#
+# STOP_TIME bounds every run: several benches generate a free-running clock
+# and never terminate on their own (the stimulus process ends with `wait`,
+# but the clock keeps toggling). Without a stop time GHDL would run forever
+# and the CI job would hang until the 6-hour GitHub Actions timeout. 2 ms of
+# simulated time is far more than any unit test needs.
 # ----------------------------------------------------------------------
+STOP_TIME := 2ms
+
 ci: $(WORKDIR)/.analysed
 	@echo ""
 	@echo "======================================================"
@@ -95,7 +109,7 @@ ci: $(WORKDIR)/.analysed
 	for top in $(TB_TOPS); do \
 		printf "  %-40s" "$$top ..."; \
 		LOG=$$($(GHDL) -r $(STD) --workdir=$(WORKDIR) $$top \
-			--assert-level=failure 2>&1); \
+			--assert-level=failure --stop-time=$(STOP_TIME) 2>&1); \
 		if echo "$$LOG" | grep -qiE "failure|error|FAILED"; then \
 			echo "FAIL"; \
 			echo "$$LOG" | sed 's/^/    /'; \
