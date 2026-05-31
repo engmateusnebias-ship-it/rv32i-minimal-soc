@@ -1,11 +1,17 @@
 library IEEE;
 use IEEE.STD_LOGIC_1164.ALL;
- 
+
 -- Xilinx primitives (MMCME2_BASE, BUFG)
 library UNISIM;
 use UNISIM.VComponents.all;
- 
+
 entity soc_top is
+    generic (
+        -- Program image path, forwarded to instruction_memory.
+        -- Default "program.mem" works for GHDL/CI; Vivado synthesis overrides
+        -- this top-level generic with an absolute path.
+        INIT_FILE : string := "program.mem"
+    );
     Port (
         clk         : in  std_logic;   -- 100 MHz onboard oscillator (W5)
         rst         : in  std_logic;   -- active-high, async (BTNC)
@@ -14,31 +20,35 @@ entity soc_top is
         uart_tx     : out std_logic
     );
 end soc_top;
- 
+
 architecture rtl of soc_top is
- 
+
     ---------------------------------------------------------------------------
     -- Clock signals
     ---------------------------------------------------------------------------
-    signal periph_clk_mmcm : std_logic;  -- raw output from MMCM
-    signal periph_clk       : std_logic;  -- after BUFG
+    signal periph_clk_mmcm : std_logic;  -- raw 28.8 MHz output from MMCM
+    signal periph_clk       : std_logic;  -- 28.8 MHz after BUFG
+    signal core_clk_mmcm    : std_logic;  -- raw 48 MHz output from MMCM
+    signal core_clk         : std_logic;  -- 48 MHz after BUFG (drives the core domain)
+    signal mmcm_fb          : std_logic;  -- MMCM feedback net
     signal mmcm_locked      : std_logic;
- 
+
     ---------------------------------------------------------------------------
     -- Resets
     ---------------------------------------------------------------------------
     signal rst_core   : std_logic;
     signal rst_periph : std_logic;
- 
+
     -- Periph reset is the union of the external request and MMCM not yet locked
+    signal rst_core_req   : std_logic;
     signal rst_periph_req : std_logic;
- 
+
     ---------------------------------------------------------------------------
     -- Instruction bus
     ---------------------------------------------------------------------------
     signal instr_addr  : std_logic_vector(31 downto 0);
     signal instr_rdata : std_logic_vector(31 downto 0);
- 
+
     ---------------------------------------------------------------------------
     -- CPU master bus
     ---------------------------------------------------------------------------
@@ -51,7 +61,7 @@ architecture rtl of soc_top is
     signal cpu_bus_rdata  : std_logic_vector(31 downto 0);
     signal cpu_bus_ready  : std_logic;
     signal cpu_bus_error  : std_logic;
- 
+
     ---------------------------------------------------------------------------
     -- DMA master bus
     ---------------------------------------------------------------------------
@@ -65,7 +75,7 @@ architecture rtl of soc_top is
     signal dma_m_ready    : std_logic;
     signal dma_m_error    : std_logic;
     signal dma_active     : std_logic;
- 
+
     ---------------------------------------------------------------------------
     -- Arbitrated bus (after CPU/DMA mux)
     ---------------------------------------------------------------------------
@@ -75,12 +85,12 @@ architecture rtl of soc_top is
     signal bus_write      : std_logic;
     signal bus_read       : std_logic;
     signal bus_valid      : std_logic;
- 
+
     -- Shared fabric response
     signal fabric_rdata   : std_logic_vector(31 downto 0);
     signal fabric_ready   : std_logic;
     signal fabric_error   : std_logic;
- 
+
     ---------------------------------------------------------------------------
     -- Peripheral selects
     ---------------------------------------------------------------------------
@@ -89,75 +99,83 @@ architecture rtl of soc_top is
     signal timer_sel      : std_logic;
     signal uart_sel       : std_logic;
     signal dma_sel        : std_logic;
- 
+
     signal ram_addr       : std_logic_vector(31 downto 0);
     signal gpio_addr      : std_logic_vector(31 downto 0);
     signal timer_addr     : std_logic_vector(31 downto 0);
     signal uart_addr      : std_logic_vector(31 downto 0);
     signal dma_addr       : std_logic_vector(31 downto 0);
- 
+
     signal ram_wdata      : std_logic_vector(31 downto 0);
     signal gpio_wdata     : std_logic_vector(31 downto 0);
     signal timer_wdata    : std_logic_vector(31 downto 0);
     signal uart_wdata     : std_logic_vector(31 downto 0);
     signal dma_wdata      : std_logic_vector(31 downto 0);
- 
+
     signal ram_wstrb      : std_logic_vector(3 downto 0);
     signal gpio_wstrb     : std_logic_vector(3 downto 0);
     signal timer_wstrb    : std_logic_vector(3 downto 0);
     signal uart_wstrb     : std_logic_vector(3 downto 0);
     signal dma_wstrb      : std_logic_vector(3 downto 0);
- 
+
     signal ram_write      : std_logic;
     signal gpio_write     : std_logic;
     signal timer_write    : std_logic;
     signal uart_write     : std_logic;
     signal dma_write_s    : std_logic;
- 
+
     signal ram_read       : std_logic;
     signal gpio_read      : std_logic;
     signal timer_read     : std_logic;
     signal uart_read      : std_logic;
     signal dma_read_s     : std_logic;
- 
+
     signal ram_valid      : std_logic;
     signal gpio_valid     : std_logic;
     signal timer_valid    : std_logic;
     signal uart_valid     : std_logic;
     signal dma_valid_s    : std_logic;
- 
+
     signal ram_rdata      : std_logic_vector(31 downto 0);
     signal gpio_rdata     : std_logic_vector(31 downto 0);
     signal timer_rdata    : std_logic_vector(31 downto 0);
     signal uart_rdata     : std_logic_vector(31 downto 0);
     signal dma_rdata      : std_logic_vector(31 downto 0);
- 
+
     signal ram_ready      : std_logic;
     signal gpio_ready     : std_logic;
     signal timer_ready    : std_logic;
     signal uart_ready     : std_logic;
     signal dma_ready_s    : std_logic;
- 
+
     signal ram_error      : std_logic;
     signal gpio_error     : std_logic;
     signal timer_error    : std_logic;
     signal uart_error     : std_logic;
     signal dma_error_s    : std_logic;
- 
+
     signal timer_irq      : std_logic;
     signal dma_irq        : std_logic;
     signal irq_combined   : std_logic;
- 
+
 begin
- 
+
     ---------------------------------------------------------------------------
-    -- MMCM: generates periph_clk = 28.8 MHz from clk = 100 MHz
+    -- MMCM: from clk = 100 MHz, generates two synchronous clocks:
+    --   core_clk   = 48.0 MHz  (CLKOUT0)  -- drives the CPU core domain
+    --   periph_clk = 28.8 MHz  (CLKOUT1)  -- drives the UART TX engine
     --
-    --   VCO  = 100 MHz * CLKFBOUT_MULT_F / DIVCLK_DIVIDE
-    --        = 100 * 36 / 5 = 720 MHz  (within 600-1200 MHz for Artix-7)
-    --   CLKOUT0 = VCO / CLKOUT0_DIVIDE_F = 720 / 25 = 28.8 MHz
+    --   VCO = 100 MHz * CLKFBOUT_MULT_F / DIVCLK_DIVIDE = 100 * 36 / 5 = 720 MHz
+    --         (within 600-1200 MHz for Artix-7 -1 speed grade)
+    --   CLKOUT0 = VCO / 15.0 = 48.0 MHz
+    --   CLKOUT1 = VCO / 25   = 28.8 MHz
     --
-    -- UART bauddiv reference values:
+    -- The core runs at 48 MHz (not 100 MHz) because the single-cycle datapath
+    -- has a ~19 ns combinational critical path (fmax ~52 MHz). 48 MHz is the
+    -- highest core frequency obtainable from the same VCO that yields the exact
+    -- 28.8 MHz peripheral clock, so a single MMCM serves both domains.
+    --
+    -- UART bauddiv reference values (periph_clk = 28.8 MHz, unchanged):
     --     9600 bps  ->  bauddiv = 2999
     --   115200 bps  ->  bauddiv =  249
     --   230400 bps  ->  bauddiv =  124
@@ -165,11 +183,14 @@ begin
     mmcm_inst : MMCME2_BASE
         generic map (
             CLKIN1_PERIOD      => 10.0,    -- 100 MHz input
-            CLKFBOUT_MULT_F    => 36.0,    -- VCO multiply
+            CLKFBOUT_MULT_F    => 36.0,    -- VCO multiply  -> 720 MHz
             DIVCLK_DIVIDE      => 5,       -- VCO pre-divider
-            CLKOUT0_DIVIDE_F   => 25.0,    -- periph_clk divider
+            CLKOUT0_DIVIDE_F   => 15.0,    -- core_clk   = 720/15   = 48.0 MHz
+            CLKOUT1_DIVIDE     => 25,      -- periph_clk = 720/25   = 28.8 MHz
             CLKOUT0_DUTY_CYCLE => 0.5,
+            CLKOUT1_DUTY_CYCLE => 0.5,
             CLKOUT0_PHASE      => 0.0,
+            CLKOUT1_PHASE      => 0.0,
             BANDWIDTH          => "OPTIMIZED",
             CLKFBOUT_PHASE     => 0.0,
             REF_JITTER1        => 0.01,
@@ -177,45 +198,56 @@ begin
         )
         port map (
             CLKIN1   => clk,
-            CLKFBIN  => periph_clk,        -- feedback loop closed through BUFG
-            CLKOUT0  => periph_clk_mmcm,
-            CLKFBOUT => open,              -- feedback not used (self-contained)
+            CLKFBIN  => mmcm_fb,           -- feedback loop closed through BUFG
+            CLKOUT0  => core_clk_mmcm,
+            CLKOUT1  => periph_clk_mmcm,
+            CLKFBOUT => mmcm_fb,
             LOCKED   => mmcm_locked,
             PWRDWN   => '0',
             RST      => '0'
         );
- 
-    -- Route MMCM output through a global clock buffer
+
+    -- Route each MMCM output through its own global clock buffer
+    bufg_core : BUFG
+        port map (
+            I => core_clk_mmcm,
+            O => core_clk
+        );
+
     bufg_periph : BUFG
         port map (
             I => periph_clk_mmcm,
             O => periph_clk
         );
- 
+
     ---------------------------------------------------------------------------
     -- Resets
     --
-    -- rst_core   : synchronised to clk (100 MHz domain)
-    -- rst_periph : synchronised to periph_clk (28.8 MHz domain)
+    -- rst_core   : synchronised to core_clk (48 MHz domain),
+    --              held asserted until MMCM is locked
+    -- rst_periph : synchronised to periph_clk (28.8 MHz domain),
     --              held asserted until MMCM is locked
     ---------------------------------------------------------------------------
+    -- Keep core domain in reset while MMCM is not yet locked
+    rst_core_req <= rst or (not mmcm_locked);
+
     rst_core_sync_i : entity work.reset_synchronizer
         port map (
-            clk     => clk,
-            rst_in  => rst,
+            clk     => core_clk,
+            rst_in  => rst_core_req,
             rst_out => rst_core
         );
- 
+
     -- Keep periph domain in reset while MMCM is not yet locked
     rst_periph_req <= rst or (not mmcm_locked);
- 
+
     rst_periph_sync_i : entity work.reset_synchronizer
         port map (
             clk     => periph_clk,
             rst_in  => rst_periph_req,
             rst_out => rst_periph
         );
- 
+
     ---------------------------------------------------------------------------
     -- Bus arbitration: DMA takes priority over CPU
     ---------------------------------------------------------------------------
@@ -225,25 +257,25 @@ begin
     bus_write <= dma_m_write when dma_active = '1' else cpu_bus_write;
     bus_read  <= dma_m_read  when dma_active = '1' else cpu_bus_read;
     bus_valid <= dma_m_valid when dma_active = '1' else cpu_bus_valid;
- 
+
     -- CPU must not observe fabric responses while DMA owns the bus
     cpu_bus_rdata <= fabric_rdata when dma_active = '0' else (others => '0');
     cpu_bus_ready <= fabric_ready when dma_active = '0' else '0';
     cpu_bus_error <= fabric_error when dma_active = '0' else '0';
- 
+
     -- DMA always sees the real fabric response
     dma_m_rdata <= fabric_rdata;
     dma_m_ready <= fabric_ready;
     dma_m_error <= fabric_error;
- 
+
     irq_combined <= timer_irq or dma_irq;
- 
+
     ---------------------------------------------------------------------------
     -- Component instantiations
     ---------------------------------------------------------------------------
     core_i : entity work.rv32i_core
         port map (
-            clk         => clk,
+            clk         => core_clk,
             rst         => rst_core,
             instr_addr  => instr_addr,
             instr_rdata => instr_rdata,
@@ -258,13 +290,16 @@ begin
             bus_error   => cpu_bus_error,
             irq_in      => irq_combined
         );
- 
+
     instr_mem_i : entity work.instruction_memory
+        generic map (
+            INIT_FILE => INIT_FILE
+        )
         port map (
             addr        => instr_addr,
             instruction => instr_rdata
         );
- 
+
     bus_i : entity work.bus_interconnect
         port map (
             m_addr      => bus_addr,
@@ -276,7 +311,7 @@ begin
             m_rdata     => fabric_rdata,
             m_ready     => fabric_ready,
             m_error     => fabric_error,
- 
+
             ram_sel     => ram_sel,
             ram_addr    => ram_addr,
             ram_wdata   => ram_wdata,
@@ -287,7 +322,7 @@ begin
             ram_rdata   => ram_rdata,
             ram_ready   => ram_ready,
             ram_error   => ram_error,
- 
+
             gpio_sel    => gpio_sel,
             gpio_addr   => gpio_addr,
             gpio_wdata  => gpio_wdata,
@@ -298,7 +333,7 @@ begin
             gpio_rdata  => gpio_rdata,
             gpio_ready  => gpio_ready,
             gpio_error  => gpio_error,
- 
+
             timer_sel   => timer_sel,
             timer_addr  => timer_addr,
             timer_wdata => timer_wdata,
@@ -309,7 +344,7 @@ begin
             timer_rdata => timer_rdata,
             timer_ready => timer_ready,
             timer_error => timer_error,
- 
+
             uart_sel    => uart_sel,
             uart_addr   => uart_addr,
             uart_wdata  => uart_wdata,
@@ -320,7 +355,7 @@ begin
             uart_rdata  => uart_rdata,
             uart_ready  => uart_ready,
             uart_error  => uart_error,
- 
+
             dma_sel     => dma_sel,
             dma_addr    => dma_addr,
             dma_wdata   => dma_wdata,
@@ -332,10 +367,10 @@ begin
             dma_ready   => dma_ready_s,
             dma_error   => dma_error_s
         );
- 
+
     ram_i : entity work.data_memory
         port map (
-            clk      => clk,
+            clk      => core_clk,
             rst      => rst_core,
             sel      => ram_sel,
             addr     => ram_addr,
@@ -348,10 +383,10 @@ begin
             ready    => ram_ready,
             error    => ram_error
         );
- 
+
     gpio_i : entity work.gpio
         port map (
-            clk         => clk,
+            clk         => core_clk,
             rst         => rst_core,
             sel         => gpio_sel,
             addr        => gpio_addr,
@@ -366,10 +401,10 @@ begin
             gpio_out    => gpio_out,
             gpio_toggle => gpio_toggle
         );
- 
+
     timer_i : entity work.timer
         port map (
-            clk      => clk,
+            clk      => core_clk,
             rst      => rst_core,
             sel      => timer_sel,
             addr     => timer_addr,
@@ -383,10 +418,10 @@ begin
             error    => timer_error,
             irq      => timer_irq
         );
- 
+
     uart_i : entity work.uart
         port map (
-            core_clk   => clk,
+            core_clk   => core_clk,
             core_rst   => rst_core,
             periph_clk => periph_clk,
             periph_rst => rst_periph,
@@ -402,10 +437,10 @@ begin
             error      => uart_error,
             uart_tx    => uart_tx
         );
- 
+
     dma_i : entity work.dma
         port map (
-            clk      => clk,
+            clk      => core_clk,
             rst      => rst_core,
             sel      => dma_sel,
             addr     => dma_addr,
@@ -429,5 +464,5 @@ begin
             active_o => dma_active,
             irq      => dma_irq
         );
- 
+
 end rtl;

@@ -5,6 +5,12 @@ use STD.TEXTIO.ALL;
 use IEEE.STD_LOGIC_TEXTIO.ALL;
 
 entity instruction_memory is
+    generic (
+        -- Path to the program image. Default works for GHDL/CI (file at the
+        -- working directory). Vivado synthesis overrides this with an absolute
+        -- path because its run directory differs (.runs/synth_1).
+        INIT_FILE : string := "program.mem"
+    );
     Port (
         addr        : in  std_logic_vector(31 downto 0);     -- Address from PC
         instruction : out std_logic_vector(31 downto 0)      -- Instruction at that address
@@ -20,7 +26,7 @@ architecture rtl of instruction_memory is
 
     -- File loading
     impure function load_program return mem_array is
-        file mem_file : text open read_mode is "program.mem";
+        file mem_file : text open read_mode is INIT_FILE;
         variable line_buf : line;
         variable mem      : mem_array := (others => (others => '0'));
         variable i        : integer := 0;
